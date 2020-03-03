@@ -1,0 +1,40 @@
+{
+    "items": [
+        {
+            "category": "Appetizers",
+            "name": "Cheesecurds",
+            "description": "yummy, gooey wisconson cheese deepfried in pig oil batter and served with a dollop of house sause",
+            "price": 5.50,
+            "allergens": [
+                "peanuts",
+                "vegetarian",
+                "lactose"
+            ]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Mini Tacos",
+            "price": 7.50,
+            "description": "bite-sized Mexico"
+        },
+        {
+            "category": "Burgers",
+            "name": "Black Bean Burger",
+            "price": 9.5,
+            "description": "organic black bean burger topped with carrots, fries, and horse radish",
+            "allergens":[
+                "vegan"
+            ]
+        },
+        {
+            "category": "Burgers",
+            "name": "Cowboy Burger",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        }
+    ]
+}

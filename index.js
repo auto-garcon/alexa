@@ -4,8 +4,8 @@
 const Alexa = require("ask-sdk-core");
 const https = require("https");
 
-const jsonMenu = require("./test-menu.json");
-
+jsonDinnerMenu = require("./dinner_menu.json")
+jsonDrinkMenu = require("./drink_menu.json")
 const invocationName = "auto garcon";
 
 // Session Attributes 
@@ -13,6 +13,8 @@ const invocationName = "auto garcon";
 //   The history[] array will track previous request(s), used for contextual Help/Yes/No handling.
 //   Set up DynamoDB persistence to have the skill save and reload these attributes between skill sessions.
 
+
+//THIS IS GETTING A LIST OF CATEGORIES
 function jsonParser(stringValue) {
 
    var string = JSON.stringify(stringValue);
@@ -20,7 +22,59 @@ function jsonParser(stringValue) {
    return objectValue;
 }
 
-const menu = jsonParser(jsonMenu)
+const dinnerMenu = jsonParser(jsonDinnerMenu);
+const drinkMenu = jsonParser(jsonDrinkMenu);
+
+
+
+var categories = [];
+var catIndex = 0;
+function ListOfCategories() {
+    for (var i = 0; i < dinnerMenu.items.length; i++) {
+        if (categories.length == 0) {
+            categories[catIndex] = dinnerMenu.items[i].category;
+            catIndex += 1;
+            //console.log(dinnerMenu.items[i].category);
+        }
+        else{
+            var alreadyIn = 0;
+            for (var j = 0; j < categories.length; j++) {
+                if(dinnerMenu.items[i].category == categories[j]){
+                    alreadyIn=1;
+                }
+            }
+            if(alreadyIn!=1){
+                categories[catIndex] = dinnerMenu.items[i].category;
+                catIndex += 1;
+                alreadyIn =0;
+            }
+        }
+    }
+    for (var i = 0; i < drinkMenu.items.length; i++) {
+        if (categories.length == 0) {
+            categories[catIndex] = drinkMenu.items[i].category;
+            catIndex += 1;
+            //console.log(dinnerMenu.items[i].category);
+        }
+        else{
+            var alreadyIn = 0;
+            for (var j = 0; j < categories.length; j++) {
+                if(drinkMenu.items[i].category == categories[j]){
+                    alreadyIn=1;
+                }
+            }
+            if(alreadyIn!=1){
+                categories[catIndex] = drinkMenu.items[i].category;
+                catIndex += 1;
+                alreadyIn =0;
+            }
+        }
+    }
+    
+}
+
+
+//END GET LIST OF CATEGORIES
 
 
 function getMemoryAttributes() {   const memoryAttributes = {
@@ -178,24 +232,50 @@ const ReadMenu_Handler =  {
         let resolvedSlot;
 
         let slotValues = getSlotValues(request.intent.slots); 
+
         
-        let fullMenu = '';
-        for(var i = 0; i < menu.fullMenu.length; i++){
-            var cat = menu.fullMenu[i];
-            for(var j = 0; j < cat.items.length; j++){
-                fullMenu += " " + cat.items[j].name + ","
-            }
+        ListOfCategories();
+        var catString = ' ';
+        for (var j = 0; j < categories.length; j++) {
+            catString += categories[j]+ ", ";
         }
         
         // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
 
         // console.log('***** slotValues: ' +  JSON.stringify(slotValues, null, 2));
         //   SLOT: category 
-        if (slotValues.category.heardAs) {
-            slotStatus += ' slot category was heard as ' + slotValues.category.heardAs + '. ';
-        } else {
+        if(slotValues.category.resolved=="drinks"){
+            var listOfDrinks = " ";
+            for (var i = 0; i < drinkMenu.items.length; i++) {
+                listOfDrinks += drinkMenu.items[i].name + ", "
+            }
+            say = "Here are the drinks I found: "+ listOfDrinks;
+        }
+        else if(slotValues.category.resolved=="appetizers"){
+            var listOfApps = " ";
+            for (var i = 0; i < dinnerMenu.items.length; i++) {
+                if(dinnerMenu.items[i].category == "Appetizers"){
+                    listOfApps += dinnerMenu.items[i].name + ", "
+                }
+            }
+            say = "Here are the appetizers I found: "+ listOfApps;
+        }
+        else if(slotValues.category.resolved=="entrees"){
+            var listOfEntrees = " ";
+            for (var i = 0; i < dinnerMenu.items.length; i++) {
+                if(dinnerMenu.items[i].category == "Burgers"){
+                    listOfEntrees += dinnerMenu.items[i].name + ", "
+                }
+            }
+            say = "Here are the entrees I found: "+ listOfEntrees;
+        }
+
+        //if (slotValues.category.heardAs) {
+        //    slotStatus += ' slot category was heard as ' + slotValues.category.heardAs + '. ';
+        //}
+         else {
             //slotStatus += 'slot category is empty. ';
-            slotStatus += fullMenu;
+            say = "I didn't understand that command. Here are valid section of the menu to request: "+catString;
         }
         // if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
         //     slotStatus += 'a valid ';

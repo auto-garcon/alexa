@@ -1,0 +1,37 @@
+{
+    "items": [
+        {
+            "category": "Beer",
+            "name": "Corona",
+            "description": "will rapidly consume your whole body with a good feeling, unlike the virus",
+            "price": 5.00,
+            "allergens": [
+                "gluten"
+            ]
+        },
+        {
+            "category": "Beer",
+            "name": "Ham's",
+            "description": "cheap beer, expensive hangover",
+            "price": 3.00,
+            "allergens": [
+                "gluten"
+            ]
+        },
+        {
+            "category": "Beer",
+            "name": "Summit IPA",
+            "description": "Made locally in Minnesota, this refreshing beer brings back memories of summer nights drinking on the deck with your besties",
+            "price": 5.00,
+            "allergens": [
+                "gluten"
+            ]
+        },
+        {
+            "category": "Wine",
+            "name": "Merlot",
+            "description": "It's a red. Complements the Black Bean Burger well",
+            "price": 5.25
+        }
+    ]
+}
