@@ -73,3 +73,48 @@ var listOfDrinks = " ";
 for (var i = 0; i < drinkMenu.items.length; i++) {
     listOfDrinks += drinkMenu.items[i].name + ", "
 }
+
+
+var currentOrder = [];
+var say = "";
+
+//this will return an object based on a text string match with the name of the item
+function FindItem(itemName){
+    for (var i = 0; i < dinnerMenu.items.length; i++) {
+        if(dinnerMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
+            return dinnerMenu.items[i];
+        }
+    }
+    for (var i = 0; i < drinkMenu.items.length; i++) {
+        if(drinkMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
+            return drinkMenu.items[i];
+        }
+    }
+}
+
+function AddToOrder(itemObject){
+    var lenOfOrder = currentOrder.length;
+    currentOrder[lenOfOrder] = itemObject;
+}
+
+function GetPrice(itemObject){
+    say = itemObject.price;
+}
+
+function ReadCurrentOrder(){
+    if(currentOrder.length == 0){
+        say = "There are currently no items in your order";
+    }
+    else{
+        for(var i =0; i < currentOrder.length; i++){
+            say += currentOrder[i].name + ", ";
+        }
+    }
+}
+
+
+AddToOrder(FindItem("Cheesecurds"));
+AddToOrder(FindItem("Mini Tacos"));
+ReadCurrentOrder();
+//GetPrice(FindItem("Cheesecurds"));
+console.log(say);
