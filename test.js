@@ -100,6 +100,9 @@ function AddToOrder(itemObject){
 function GetPrice(itemObject){
     say = itemObject.price;
 }
+function GetDescription(itemObject){
+    say = itemObject.description;
+}
 
 function ReadCurrentOrder(){
     if(currentOrder.length == 0){
@@ -116,5 +119,6 @@ function ReadCurrentOrder(){
 AddToOrder(FindItem("Cheesecurds"));
 AddToOrder(FindItem("Mini Tacos"));
 ReadCurrentOrder();
+GetDescription(FindItem("Merlot"));
 //GetPrice(FindItem("Cheesecurds"));
 console.log(say);

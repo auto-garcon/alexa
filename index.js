@@ -1,11 +1,12 @@
 // Lambda Function code for Alexa.
 // Paste this into your index.js file. 
+//Testing functionality
 
 const Alexa = require("ask-sdk-core");
 const https = require("https");
 
-jsonDinnerMenu = require("./dinner_menu.json")
-jsonDrinkMenu = require("./drink_menu.json")
+const jsonDinnerMenu = require("./dinner_menu.json")
+const jsonDrinkMenu = require("./drink_menu.json")
 const invocationName = "auto garcon";
 
 // Session Attributes 
@@ -13,7 +14,7 @@ const invocationName = "auto garcon";
 //   The history[] array will track previous request(s), used for contextual Help/Yes/No handling.
 //   Set up DynamoDB persistence to have the skill save and reload these attributes between skill sessions.
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////
 //THIS IS GETTING A LIST OF CATEGORIES
 function jsonParser(stringValue) {
 
@@ -25,6 +26,8 @@ function jsonParser(stringValue) {
 const dinnerMenu = jsonParser(jsonDinnerMenu);
 const drinkMenu = jsonParser(jsonDrinkMenu);
 
+//for our build order functionality
+var currentOrder = [];
 
 
 var categories = [];
@@ -73,7 +76,42 @@ function ListOfCategories() {
     
 }
 
+//this will return an object based on a text string match with the name of the item
+function FindItem(itemName){
+    for (var i = 0; i < dinnerMenu.items.length; i++) {
+        if(dinnerMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
+            return dinnerMenu.items[i];
+        }
+    }
+    for (var i = 0; i < drinkMenu.items.length; i++) {
+        if(drinkMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
+            return drinkMenu.items[i];
+        }
+    }
+}
 
+function GetPrice(itemObject){
+    return itemObject.price;
+}
+
+function AddToOrder(itemObject){
+    var lenOfOrder = currentOrder.length;
+    currentOrder[lenOfOrder] = itemObject;
+}
+
+function ReadCurrentOrder(){
+    let say = "";
+    if(currentOrder.length == 0){
+        say = "There are currently no items in your order";
+    }
+    else{
+        for(var i =0; i < currentOrder.length; i++){
+            say += currentOrder[i].name + ", ";
+        }
+    }
+    return say;
+}
+/////////////////////////////////////////////////////////////////////////////////
 //END GET LIST OF CATEGORIES
 
 
@@ -244,39 +282,66 @@ const ReadMenu_Handler =  {
 
         // console.log('***** slotValues: ' +  JSON.stringify(slotValues, null, 2));
         //   SLOT: category 
-        if(slotValues.category.resolved=="drinks"){
-            var listOfDrinks = " ";
-            for (var i = 0; i < drinkMenu.items.length; i++) {
-                listOfDrinks += drinkMenu.items[i].name + ", "
+        
+        if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
+            if(slotValues.category.resolved=="drinks"){
+                var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
+                // for (var i = 0; i < drinkMenu.items.length; i++) {
+                //     listOfDrinks += drinkMenu.items[i].name + ", "
+                // }
+                say = "Here are the drinks I found: "+ listOfDrinks;
             }
-            say = "Here are the drinks I found: "+ listOfDrinks;
-        }
-        else if(slotValues.category.resolved=="appetizers"){
-            var listOfApps = " ";
-            for (var i = 0; i < dinnerMenu.items.length; i++) {
-                if(dinnerMenu.items[i].category == "Appetizers"){
-                    listOfApps += dinnerMenu.items[i].name + ", "
-                }
+            else{
+                var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => item.name).join(", ");
+                say = "Here are the " + slotValues.category.resolved +" I found: "+ elseMenu;
+                
             }
-            say = "Here are the appetizers I found: "+ listOfApps;
         }
-        else if(slotValues.category.resolved=="entrees"){
-            var listOfEntrees = " ";
-            for (var i = 0; i < dinnerMenu.items.length; i++) {
-                if(dinnerMenu.items[i].category == "Burgers"){
-                    listOfEntrees += dinnerMenu.items[i].name + ", "
-                }
-            }
-            say = "Here are the entrees I found: "+ listOfEntrees;
+        if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+            //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
+            var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => item.name).join(", ");
+            
+            
+            say = elseMenu.length > 0 ? "Here are the " + slotValues.category.heardAs +" I found: "+ elseMenu : "I found no " + slotValues.category.heardAs + " items";
         }
+        
+        // else if(slotValues.category.resolved=="appetizers"){
+        //     var listOfApps = " ";
+        //     for (var i = 0; i < dinnerMenu.items.length; i++) {
+        //         if(dinnerMenu.items[i].category == "Appetizers"){
+        //             listOfApps += dinnerMenu.items[i].name + ", "
+        //         }
+        //     }
+        //     say = "Here are the appetizers I found: "+ listOfApps;
+        // }
+        // else if(slotValues.category.resolved=="entrees"){
+        //     var listOfEntrees = " ";
+        //     for (var i = 0; i < dinnerMenu.items.length; i++) {
+        //         if(dinnerMenu.items[i].category == "Burgers"){
+        //             listOfEntrees += dinnerMenu.items[i].name + ", "
+        //         }
+        //     }
+        //     say = "Here are the entrees I found: "+ listOfEntrees;
+        // }
 
-        //if (slotValues.category.heardAs) {
-        //    slotStatus += ' slot category was heard as ' + slotValues.category.heardAs + '. ';
-        //}
-         else {
-            //slotStatus += 'slot category is empty. ';
-            say = "I didn't understand that command. Here are valid section of the menu to request: "+catString;
-        }
+        // //if (slotValues.category.heardAs) {
+        // //    slotStatus += ' slot category was heard as ' + slotValues.category.heardAs + '. ';
+        // //}
+        
+        // //otherwise if the slot category is empty, just read all items on menu.
+        //  else {
+        //     //slotStatus += 'slot category is empty. ';
+        //     var listOfItems = " ";
+        //     for(var i = 0; i < dinnerMenu.items.length; i++){
+        //         listOfItems+=dinnerMenu.items[i].name + ", ";
+        //     }
+        //     for(var i = 0; i < drinkMenu.items.length; i++){
+        //         listOfItems+=drinkMenu.items[i].name + ", ";
+        //     }
+        //     say = "Here are the items on the menu: " + listOfItems;
+        // }
+        
+        
         // if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
         //     slotStatus += 'a valid ';
         //     if(slotValues.category.resolved !== slotValues.category.heardAs) {
@@ -314,65 +379,44 @@ const Pricing_Handler =  {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-        let say = 'Hello from Pricing. ';
+        
+        let slotValues = getSlotValues(request.intent.slots); 
+        let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
 
-        let slotValues = getSlotValues(request.intent.slots); 
-        // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
 
-        // console.log('***** slotValues: ' +  JSON.stringify(slotValues, null, 2));
-        //   SLOT: item 
-        if (slotValues.item.heardAs) {
-            slotStatus += ' slot item was heard as ' + slotValues.item.heardAs + '. ';
-        } else {
-            slotStatus += 'slot item is empty. ';
-        }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            slotStatus += 'a valid ';
-            if(slotValues.item.resolved !== slotValues.item.heardAs) {
-                slotStatus += 'synonym for ' + slotValues.item.resolved + '. '; 
-                } else {
-                slotStatus += 'match. '
-            } // else {
-                //
+            say = "$"+GetPrice(FindItem(slotValues.item.heardAs));
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             slotStatus += 'which did not match any slot value. ';
             console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         }
 
-        if( (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') ||  (!slotValues.item.heardAs) ) {
-            slotStatus += 'A few valid values are, ' + sayArray(getExampleSlotValues('Pricing','item'), 'or');
-        }
-        //   SLOT: category 
-        if (slotValues.category.heardAs) {
-            slotStatus += ' slot category was heard as ' + slotValues.category.heardAs + '. ';
-        } else {
-            slotStatus += 'slot category is empty. ';
-        }
+
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-            slotStatus += 'a valid ';
-            if(slotValues.category.resolved !== slotValues.category.heardAs) {
-                slotStatus += 'synonym for ' + slotValues.category.resolved + '. '; 
-                } else {
-                slotStatus += 'match. '
-            } // else {
-                //
+            if(slotValues.category.resolved=="drinks"){
+                say = drinkMenu.items.map(item => {
+                    return item.name + " is $" + item.price;
+                }).join(", ");
+            }
+            else{
+                say = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
+                    return item.name + " is $" + item.price;
+                }).join(", ");
+            }
         }
         if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            slotStatus += 'which did not match any slot value. ';
-            console.log('***** consider adding "' + slotValues.category.heardAs + '" to the custom slot type used by slot category! '); 
+            var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
+                    return item.name + " is $" + item.price;
+                }).join(", ");
+            say = elseMenu.length > 0 ? elseMenu : "I found no " + slotValues.category.heardAs + " items";
         }
 
-        if( (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') ||  (!slotValues.category.heardAs) ) {
-            slotStatus += 'A few valid values are, ' + sayArray(getExampleSlotValues('Pricing','category'), 'or');
-        }
-
+        //still just for testing if unwanted scripts run
         say += slotStatus;
-
 
         return responseBuilder
             .speak(say)
@@ -390,42 +434,26 @@ const BuildOrder_Handler =  {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-        let say = 'Hello from BuildOrder. ';
+        
+        let slotValues = getSlotValues(request.intent.slots); 
+        let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
 
-        let slotValues = getSlotValues(request.intent.slots); 
-        // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
 
-        // console.log('***** slotValues: ' +  JSON.stringify(slotValues, null, 2));
-        //   SLOT: item 
-        if (slotValues.item.heardAs) {
-            slotStatus += ' slot item was heard as ' + slotValues.item.heardAs + '. ';
-        } else {
-            slotStatus += 'slot item is empty. ';
-        }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            slotStatus += 'a valid ';
-            if(slotValues.item.resolved !== slotValues.item.heardAs) {
-                slotStatus += 'synonym for ' + slotValues.item.resolved + '. '; 
-                } else {
-                slotStatus += 'match. '
-            } // else {
-                //
+            AddToOrder(FindItem(slotValues.item.heardAs));
+            say = "successfully added " +slotValues.item.heardAs +" to order";//ReadCurrentOrder();
+            say += "your have " + ReadCurrentOrder() +" in your order so far";
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             slotStatus += 'which did not match any slot value. ';
             console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         }
 
-        if( (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') ||  (!slotValues.item.heardAs) ) {
-            slotStatus += 'A few valid values are, ' + sayArray(getExampleSlotValues('BuildOrder','item'), 'or');
-        }
-
+        //still just for testing if unwanted scripts run
         say += slotStatus;
-
 
         return responseBuilder
             .speak(say)
@@ -915,167 +943,228 @@ exports.handler = skillBuilder
 // End of Skill code -------------------------------------------------------------
 // Static Language Model for reference
 
+
 const model = {
-  "interactionModel": {
-    "languageModel": {
-      "invocationName": "auto garcon",
-      "intents": [
-        {
-          "name": "AMAZON.FallbackIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.CancelIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.HelpIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.StopIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.NavigateHomeIntent",
-          "samples": []
-        },
-        {
-          "name": "ReadMenu",
-          "slots": [
-            {
-              "name": "category",
-              "type": "category"
-            }
-          ],
-          "samples": [
-            "what do you have for {category}",
-            "what are your {category}",
-            "read me the {category} options",
-            "read me the {category} menu",
-            "read me the {category}",
-            "what's on the menu",
-            "read me the menu",
-            "read menu"
-          ]
-        },
-        {
-          "name": "Pricing",
-          "slots": [
-            {
-              "name": "item",
-              "type": "item"
-            },
-            {
-              "name": "category",
-              "type": "category"
-            }
-          ],
-          "samples": [
-            "how much are your {category}",
-            "how much is {item}",
-            "how much does {item} cost",
-            "what's the price of {item}"
-          ]
-        },
-        {
-          "name": "BuildOrder",
-          "slots": [
-            {
-              "name": "item",
-              "type": "item"
-            }
-          ],
-          "samples": [
-            "add {item} to order",
-            "order {item}"
-          ]
-        },
-        {
-          "name": "PlaceOrder",
-          "slots": [],
-          "samples": [
-            "send order to kitchen",
-            "place order"
-          ]
-        },
-        {
-          "name": "LaunchRequest"
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "auto garcon",
+            "intents": [
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "ReadMenu",
+                    "slots": [
+                        {
+                            "name": "category",
+                            "type": "category"
+                        }
+                    ],
+                    "samples": [
+                        "what do you have for {category}",
+                        "what are your {category}",
+                        "read me the {category} options",
+                        "read me the {category} menu",
+                        "read me the {category}",
+                        "what's on the menu",
+                        "read me the menu",
+                        "read menu"
+                    ]
+                },
+                {
+                    "name": "Pricing",
+                    "slots": [
+                        {
+                            "name": "item",
+                            "type": "item"
+                        },
+                        {
+                            "name": "category",
+                            "type": "category"
+                        }
+                    ],
+                    "samples": [
+                        "how much are your {category}",
+                        "how much is {item}",
+                        "how much does {item} cost",
+                        "what's the price of {item}"
+                    ]
+                },
+                {
+                    "name": "BuildOrder",
+                    "slots": [
+                        {
+                            "name": "item",
+                            "type": "item"
+                        }
+                    ],
+                    "samples": [
+                        "add {item} to order",
+                        "order {item}"
+                    ]
+                },
+                {
+                    "name": "PlaceOrder",
+                    "slots": [],
+                    "samples": [
+                        "send order to kitchen",
+                        "place order"
+                    ]
+                }
+            ],
+            "types": [
+                {
+                    "name": "category",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "baked goods"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "beers",
+                                "synonyms": [
+                                    "beer"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "gluten free"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "vegan",
+                                "synonyms": [
+                                    "vegetarian",
+                                    "meatless"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "sides"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "sandwiches"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "soups"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "tests"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "drinks",
+                                "synonyms": [
+                                    "beverages"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "desserts"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "entrees"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "appetizers",
+                                "synonyms": [
+                                    "apps",
+                                    "starters"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "item",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "Pinot noir"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Merlot"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Summit IPA"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Ham's"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Corona"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cowboy Burger"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Black Bean Burger"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Mini Tacos"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cheesecurds"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "water"
+                            }
+                        }
+                    ]
+                }
+            ]
         }
-      ],
-      "types": [
-        {
-          "name": "category",
-          "values": [
-            {
-              "name": {
-                "value": "gluten free"
-              }
-            },
-            {
-              "name": {
-                "value": "vegan",
-                "synonyms": [
-                  "vegetarian",
-                  "meatless"
-                ]
-              }
-            },
-            {
-              "name": {
-                "value": "sides"
-              }
-            },
-            {
-              "name": {
-                "value": "sandwiches"
-              }
-            },
-            {
-              "name": {
-                "value": "soups"
-              }
-            },
-            {
-              "name": {
-                "value": "drinks",
-                "synonyms": [
-                  "beverages"
-                ]
-              }
-            },
-            {
-              "name": {
-                "value": "desserts"
-              }
-            },
-            {
-              "name": {
-                "value": "entrees"
-              }
-            },
-            {
-              "name": {
-                "value": "appetizers",
-                "synonyms": [
-                  "apps",
-                  "starters"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "item",
-          "values": [
-            {
-              "name": {
-                "value": "water"
-              }
-            }
-          ]
-        }
-      ]
     }
-  }
-};
+}
