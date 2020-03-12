@@ -37,7 +37,6 @@ function ListOfCategories() {
         if (categories.length == 0) {
             categories[catIndex] = dinnerMenu.items[i].category;
             catIndex += 1;
-            //console.log(dinnerMenu.items[i].category);
         }
         else{
             var alreadyIn = 0;
@@ -57,7 +56,6 @@ function ListOfCategories() {
         if (categories.length == 0) {
             categories[catIndex] = drinkMenu.items[i].category;
             catIndex += 1;
-            //console.log(dinnerMenu.items[i].category);
         }
         else{
             var alreadyIn = 0;
@@ -95,8 +93,19 @@ function GetPrice(itemObject){
 }
 
 function AddToOrder(itemObject){
-    var lenOfOrder = currentOrder.length;
-    currentOrder[lenOfOrder] = itemObject;
+    currentOrder.push(itemObject);
+}
+
+function RemoveFromOrder(itemObject){
+    let newOrder = []
+    for (let i = 0; i < currentOrder.length; i++) {
+        if (currentOrder[i] !== itemObject) {
+            newOrder.push(currentOrder[i])
+        }
+    }
+    let result = currentOrder !== newOrder;
+    currentOrder = newOrder
+    return result;
 }
 
 function ReadCurrentOrder(){
@@ -199,12 +208,6 @@ const AMAZON_HelpIntent_Handler =  {
 
         let say = 'You asked for help. '; 
 
-        // let previousIntent = getPreviousIntent(sessionAttributes);
-        // if (previousIntent && !handlerInput.requestEnvelope.session.new) {
-        //     say += 'Your last intent was ' + previousIntent + '. ';
-        // }
-        // say +=  'I understand  ' + intents.length + ' intents, '
-
         say += ' Here something you can ask me, ' + getSampleUtterance(sampleIntent);
 
         return responseBuilder
@@ -280,15 +283,12 @@ const ReadMenu_Handler =  {
         
         // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
 
-        // console.log('***** slotValues: ' +  JSON.stringify(slotValues, null, 2));
         //   SLOT: category 
         
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
             if(slotValues.category.resolved=="drinks"){
                 var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
-                // for (var i = 0; i < drinkMenu.items.length; i++) {
-                //     listOfDrinks += drinkMenu.items[i].name + ", "
-                // }
+ 
                 say = "Here are the drinks I found: "+ listOfDrinks;
             }
             else{
@@ -301,65 +301,14 @@ const ReadMenu_Handler =  {
             //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
             var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => item.name).join(", ");
             
-            
-            say = elseMenu.length > 0 ? "Here are the " + slotValues.category.heardAs +" I found: "+ elseMenu : "I found no " + slotValues.category.heardAs + " items";
+            if (elseMenu.length > 0) {
+                say = "Here are the " + slotValues.category.heardAs +" I found: "+ elseMenu
+            } else {
+                say = "I found no " + slotValues.category.heardAs + " items";
+            }
+                
         }
         
-        // else if(slotValues.category.resolved=="appetizers"){
-        //     var listOfApps = " ";
-        //     for (var i = 0; i < dinnerMenu.items.length; i++) {
-        //         if(dinnerMenu.items[i].category == "Appetizers"){
-        //             listOfApps += dinnerMenu.items[i].name + ", "
-        //         }
-        //     }
-        //     say = "Here are the appetizers I found: "+ listOfApps;
-        // }
-        // else if(slotValues.category.resolved=="entrees"){
-        //     var listOfEntrees = " ";
-        //     for (var i = 0; i < dinnerMenu.items.length; i++) {
-        //         if(dinnerMenu.items[i].category == "Burgers"){
-        //             listOfEntrees += dinnerMenu.items[i].name + ", "
-        //         }
-        //     }
-        //     say = "Here are the entrees I found: "+ listOfEntrees;
-        // }
-
-        // //if (slotValues.category.heardAs) {
-        // //    slotStatus += ' slot category was heard as ' + slotValues.category.heardAs + '. ';
-        // //}
-        
-        // //otherwise if the slot category is empty, just read all items on menu.
-        //  else {
-        //     //slotStatus += 'slot category is empty. ';
-        //     var listOfItems = " ";
-        //     for(var i = 0; i < dinnerMenu.items.length; i++){
-        //         listOfItems+=dinnerMenu.items[i].name + ", ";
-        //     }
-        //     for(var i = 0; i < drinkMenu.items.length; i++){
-        //         listOfItems+=drinkMenu.items[i].name + ", ";
-        //     }
-        //     say = "Here are the items on the menu: " + listOfItems;
-        // }
-        
-        
-        // if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-        //     slotStatus += 'a valid ';
-        //     if(slotValues.category.resolved !== slotValues.category.heardAs) {
-        //         slotStatus += 'synonym for ' + slotValues.category.resolved + '. '; 
-        //         } else {
-        //         slotStatus += 'match. '
-        //     } // else {
-        //         //
-        // }
-        // if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-        //     slotStatus += 'which did not match any slot value. ';
-        //     console.log('***** consider adding "' + slotValues.category.heardAs + '" to the custom slot type used by slot category! '); 
-        // }
-
-        // if( (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') ||  (!slotValues.category.heardAs) ) {
-        //     slotStatus += 'A few valid values are, ' + sayArray(getExampleSlotValues('ReadMenu','category'), 'or');
-        // }
-
         say += slotStatus;
 
 
@@ -443,11 +392,12 @@ const BuildOrder_Handler =  {
 
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            AddToOrder(FindItem(slotValues.item.heardAs));
-            say = "successfully added " +slotValues.item.heardAs +" to order";//ReadCurrentOrder();
-            say += "your have " + ReadCurrentOrder() +" in your order so far";
+            AddToOrder(FindItem(slotValues.item.resolved));
+            say = "successfully added " +slotValues.item.heardAs +" to order";
+            
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+            //do based on .heardAs
             slotStatus += 'which did not match any slot value. ';
             console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         }
@@ -481,6 +431,94 @@ const PlaceOrder_Handler =  {
             .getResponse();
     },
 };
+const PriceOfOrder_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'PriceOfOrder' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let currentPrice = 0;
+        currentOrder.forEach(item => {
+            currentPrice += item.price;
+        });
+
+        let say = "The current price of your order is $" + currentPrice;
+
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
+const ReadCurrentOrder_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'ReadCurrentOrder' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+        let say = "you have " + ReadCurrentOrder() +" in your order so far";
+
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
+const RemoveItem_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'RemoveItem' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let slotValues = getSlotValues(request.intent.slots); 
+        let say = '';
+
+        let slotStatus = '';
+        let resolvedSlot;
+
+
+        if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
+            RemoveFromOrder(FindItem(slotValues.item.heardAs));
+            
+            if (RemoveFromOrder(slotValues.item.resolved)) {
+                say = "successfully removed " +slotValues.item.heardAs +" from order";
+            } else {
+                say = "I could not find " + slotValues.item.heardAs +" in your order";
+            }
+        }
+        if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+            slotStatus += 'which did not match any slot value. ';
+            console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
+        }
+        
+        
+
+        say += slotStatus;
+
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
 
 const LaunchRequest_Handler =  {
     canHandle(handlerInput) {
@@ -922,6 +960,9 @@ exports.handler = skillBuilder
         Pricing_Handler, 
         BuildOrder_Handler, 
         PlaceOrder_Handler, 
+        PriceOfOrder_Handler, 
+        ReadCurrentOrder_Handler, 
+        RemoveItem_Handler, 
         LaunchRequest_Handler, 
         SessionEndedHandler
     )
@@ -943,228 +984,287 @@ exports.handler = skillBuilder
 // End of Skill code -------------------------------------------------------------
 // Static Language Model for reference
 
-
 const model = {
-    "interactionModel": {
-        "languageModel": {
-            "invocationName": "auto garcon",
-            "intents": [
-                {
-                    "name": "AMAZON.FallbackIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.CancelIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.HelpIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.StopIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.NavigateHomeIntent",
-                    "samples": []
-                },
-                {
-                    "name": "ReadMenu",
-                    "slots": [
-                        {
-                            "name": "category",
-                            "type": "category"
-                        }
-                    ],
-                    "samples": [
-                        "what do you have for {category}",
-                        "what are your {category}",
-                        "read me the {category} options",
-                        "read me the {category} menu",
-                        "read me the {category}",
-                        "what's on the menu",
-                        "read me the menu",
-                        "read menu"
-                    ]
-                },
-                {
-                    "name": "Pricing",
-                    "slots": [
-                        {
-                            "name": "item",
-                            "type": "item"
-                        },
-                        {
-                            "name": "category",
-                            "type": "category"
-                        }
-                    ],
-                    "samples": [
-                        "how much are your {category}",
-                        "how much is {item}",
-                        "how much does {item} cost",
-                        "what's the price of {item}"
-                    ]
-                },
-                {
-                    "name": "BuildOrder",
-                    "slots": [
-                        {
-                            "name": "item",
-                            "type": "item"
-                        }
-                    ],
-                    "samples": [
-                        "add {item} to order",
-                        "order {item}"
-                    ]
-                },
-                {
-                    "name": "PlaceOrder",
-                    "slots": [],
-                    "samples": [
-                        "send order to kitchen",
-                        "place order"
-                    ]
-                }
-            ],
-            "types": [
-                {
-                    "name": "category",
-                    "values": [
-                        {
-                            "name": {
-                                "value": "baked goods"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "beers",
-                                "synonyms": [
-                                    "beer"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "gluten free"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "vegan",
-                                "synonyms": [
-                                    "vegetarian",
-                                    "meatless"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "sides"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "sandwiches"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "soups"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "tests"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "drinks",
-                                "synonyms": [
-                                    "beverages"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "desserts"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "entrees"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "appetizers",
-                                "synonyms": [
-                                    "apps",
-                                    "starters"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "item",
-                    "values": [
-                        {
-                            "name": {
-                                "value": "Pinot noir"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Merlot"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Summit IPA"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Ham's"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Corona"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Cowboy Burger"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Black Bean Burger"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Mini Tacos"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Cheesecurds"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "water"
-                            }
-                        }
-                    ]
-                }
-            ]
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "auto garcon",
+      "intents": [
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "ReadMenu",
+          "slots": [
+            {
+              "name": "category",
+              "type": "category"
+            }
+          ],
+          "samples": [
+            "what {category} are on the menu",
+            "what {category} is on the menu",
+            "what {category} do you have",
+            "what do you have for {category}",
+            "what are your {category}",
+            "read me the {category} options",
+            "read me the {category} menu",
+            "read me the {category}",
+            "what's on the menu",
+            "read me the menu",
+            "read menu"
+          ]
+        },
+        {
+          "name": "Pricing",
+          "slots": [
+            {
+              "name": "item",
+              "type": "item"
+            },
+            {
+              "name": "category",
+              "type": "category"
+            }
+          ],
+          "samples": [
+            "how much are {item}",
+            "how much are your {category}",
+            "how much is {item}",
+            "how much does {item} cost",
+            "what's the price of {item}"
+          ]
+        },
+        {
+          "name": "BuildOrder",
+          "slots": [
+            {
+              "name": "item",
+              "type": "item"
+            }
+          ],
+          "samples": [
+            "I'll have a {item}",
+            "order me a {item}",
+            "order me the {item}",
+            "i'd like a {item}",
+            "add {item} to order",
+            "order {item}"
+          ]
+        },
+        {
+          "name": "PlaceOrder",
+          "slots": [],
+          "samples": [
+            "send the order",
+            "confirm the order",
+            "place the order",
+            "send order to kitchen",
+            "place order"
+          ]
+        },
+        {
+          "name": "PriceOfOrder",
+          "slots": [],
+          "samples": [
+            "how much is all this",
+            "how much is everything",
+            "what is my total at",
+            "how much is my total",
+            "what's the total cost",
+            "total cost",
+            "how much does my food cost",
+            "how much is my meal",
+            "what's my total",
+            "order price",
+            "current price",
+            "what is the current price of my order"
+          ]
+        },
+        {
+          "name": "ReadCurrentOrder",
+          "slots": [],
+          "samples": [
+            "read the order",
+            "read me my order",
+            "read me back my order",
+            "what is in the order",
+            "what items are in the order",
+            "what items are in my order",
+            "what is my order",
+            "what's in my order"
+          ]
+        },
+        {
+          "name": "RemoveItem",
+          "slots": [
+            {
+              "name": "item",
+              "type": "item"
+            }
+          ],
+          "samples": [
+            "delete {item}",
+            "remove {item}",
+            "remove {item} from order"
+          ]
+        },
+        {
+          "name": "LaunchRequest"
         }
+      ],
+      "types": [
+        {
+          "name": "category",
+          "values": [
+            {
+              "name": {
+                "value": "baked goods"
+              }
+            },
+            {
+              "name": {
+                "value": "beers",
+                "synonyms": [
+                  "beer"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "gluten free"
+              }
+            },
+            {
+              "name": {
+                "value": "vegan",
+                "synonyms": [
+                  "vegetarian",
+                  "meatless"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "sides"
+              }
+            },
+            {
+              "name": {
+                "value": "sandwiches"
+              }
+            },
+            {
+              "name": {
+                "value": "soups"
+              }
+            },
+            {
+              "name": {
+                "value": "tests"
+              }
+            },
+            {
+              "name": {
+                "value": "drinks",
+                "synonyms": [
+                  "beverages"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "desserts"
+              }
+            },
+            {
+              "name": {
+                "value": "entrees"
+              }
+            },
+            {
+              "name": {
+                "value": "appetizers",
+                "synonyms": [
+                  "apps",
+                  "starters"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "values": [
+            {
+              "name": {
+                "value": "Pinot noir"
+              }
+            },
+            {
+              "name": {
+                "value": "Merlot"
+              }
+            },
+            {
+              "name": {
+                "value": "Summit IPA"
+              }
+            },
+            {
+              "name": {
+                "value": "Ham's"
+              }
+            },
+            {
+              "name": {
+                "value": "Corona"
+              }
+            },
+            {
+              "name": {
+                "value": "Cowboy Burger"
+              }
+            },
+            {
+              "name": {
+                "value": "Black Bean Burger"
+              }
+            },
+            {
+              "name": {
+                "value": "Mini Tacos"
+              }
+            },
+            {
+              "name": {
+                "value": "Cheesecurds"
+              }
+            },
+            {
+              "name": {
+                "value": "water"
+              }
+            }
+          ]
+        }
+      ]
     }
-}
+  }
+};
