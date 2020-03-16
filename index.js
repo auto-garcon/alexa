@@ -28,10 +28,10 @@ const drinkMenu = jsonParser(jsonDrinkMenu);
 
 //for our build order functionality
 var currentOrder = [];
-
-
 var categories = [];
 var catIndex = 0;
+//ListOfCategories:fills the categories array with the appropriate category 
+//Author:Max
 function ListOfCategories() {
     for (var i = 0; i < dinnerMenu.items.length; i++) {
         if (categories.length == 0) {
@@ -74,7 +74,8 @@ function ListOfCategories() {
     
 }
 
-//this will return an object based on a text string match with the name of the item
+//FindItem:this will return an object based on a text string match with the name of the item
+//Author:Max
 function FindItem(itemName){
     for (var i = 0; i < dinnerMenu.items.length; i++) {
         if(dinnerMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
@@ -88,14 +89,18 @@ function FindItem(itemName){
     }
 }
 
+//GetPrice: returns the price of an item
+//Author: Max
 function GetPrice(itemObject){
     return itemObject.price;
 }
-
+//AddToOrder: adds item to current order
+//Author:Max
 function AddToOrder(itemObject){
     currentOrder.push(itemObject);
 }
-
+//RemoveFromOrder: removes an item from the current order
+//Author: Jack,Max
 function RemoveFromOrder(itemObject){
     let newOrder = []
     for (let i = 0; i < currentOrder.length; i++) {
@@ -107,7 +112,8 @@ function RemoveFromOrder(itemObject){
     currentOrder = newOrder
     return result;
 }
-
+//ReadCurrentOrder: reads back the current order
+//Author: Jack,Max
 function ReadCurrentOrder(){
     let say = "";
     if(currentOrder.length == 0){
@@ -123,7 +129,7 @@ function ReadCurrentOrder(){
 /////////////////////////////////////////////////////////////////////////////////
 //END GET LIST OF CATEGORIES
 
-
+//Amazon default function
 function getMemoryAttributes() {   const memoryAttributes = {
        "history":[],
 
@@ -154,6 +160,7 @@ const maxHistorySize = 20; // remember only latest 20 intents
 
 // 1. Intent Handlers =============================================
 
+//written by Amazon default.
 const AMAZON_FallbackIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -173,6 +180,7 @@ const AMAZON_FallbackIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_CancelIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -193,6 +201,7 @@ const AMAZON_CancelIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_HelpIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -217,6 +226,7 @@ const AMAZON_HelpIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_StopIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -237,6 +247,7 @@ const AMAZON_StopIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_NavigateHomeIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -257,6 +268,8 @@ const AMAZON_NavigateHomeIntent_Handler =  {
     },
 };
 
+//ReadMenu_Handler: will read back the items in a category or entire menu.
+//Author: Alexa Development team.
 const ReadMenu_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -318,7 +331,8 @@ const ReadMenu_Handler =  {
             .getResponse();
     },
 };
-
+//Pricing_Handler: Gets the price of a slotValue.
+//Author: Jack,Max.
 const Pricing_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -374,6 +388,8 @@ const Pricing_Handler =  {
     },
 };
 
+//BuildOrder_Handler: builds up an order to send to the chef.
+//Author: Zack, Max.
 const BuildOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -412,6 +428,8 @@ const BuildOrder_Handler =  {
     },
 };
 
+//PlaceOrder_Handler:Places an order to the chef.
+//Author:Alexa Development team.
 const PlaceOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -431,6 +449,8 @@ const PlaceOrder_Handler =  {
             .getResponse();
     },
 };
+//PriceOfOrder_Handler:iterates through the current order and gives the total price.
+//Author:Jack,Max.
 const PriceOfOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -456,6 +476,8 @@ const PriceOfOrder_Handler =  {
     },
 };
 
+//ReadCurrentOrder_Handler:Reads back the number of items in the current order.
+//Author:Jack, Max.
 const ReadCurrentOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -476,6 +498,8 @@ const ReadCurrentOrder_Handler =  {
     },
 };
 
+//RemoveItem_Handler:Removes an item from the current order.
+//Author:Jack, Max.
 const RemoveItem_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -519,7 +543,7 @@ const RemoveItem_Handler =  {
     },
 };
 
-
+//written by Amazon default.
 const LaunchRequest_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -530,16 +554,12 @@ const LaunchRequest_Handler =  {
 
         let say = 'hello' + ' and welcome to ' + invocationName + ' ! Say help to hear some options.';
 
-        let skillTitle = capitalize(invocationName);
 
 
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
-            .withStandardCard('Welcome!', 
-              'Hello!\nThis is a card for your skill, ' + skillTitle,
-               welcomeCardImg.smallImageUrl, welcomeCardImg.largeImageUrl)
-            .getResponse();
+              .getResponse();
     },
 };
 
@@ -554,6 +574,7 @@ const SessionEndedHandler =  {
     }
 };
 
+//written by Amazon default.
 const ErrorHandler =  {
     canHandle() {
         return true;
@@ -582,24 +603,24 @@ const ErrorHandler =  {
 const APP_ID = undefined;  // TODO replace with your Skill ID (OPTIONAL).
 
 // 3.  Helper Functions ===================================================================
-
+//written by Amazon default.
 function capitalize(myString) {
 
      return myString.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) ;
 }
-
- 
+//written by Amazon default.
 function randomElement(myArray) { 
     return(myArray[Math.floor(Math.random() * myArray.length)]); 
 } 
  
+ //written by Amazon default.
 function stripSpeak(str) { 
     return(str.replace('<speak>', '').replace('</speak>', '')); 
 } 
  
  
  
- 
+ //written by Amazon default.
 function getSlotValues(filledSlots) { 
     const slotValues = {}; 
  
@@ -640,59 +661,7 @@ function getSlotValues(filledSlots) {
  
     return slotValues; 
 } 
- 
-function getExampleSlotValues(intentName, slotName) { 
- 
-    let examples = []; 
-    let slotType = ''; 
-    let slotValuesFull = []; 
- 
-    let intents = model.interactionModel.languageModel.intents; 
-    for (let i = 0; i < intents.length; i++) { 
-        if (intents[i].name == intentName) { 
-            let slots = intents[i].slots; 
-            for (let j = 0; j < slots.length; j++) { 
-                if (slots[j].name === slotName) { 
-                    slotType = slots[j].type; 
- 
-                } 
-            } 
-        } 
-         
-    } 
-    let types = model.interactionModel.languageModel.types; 
-    for (let i = 0; i < types.length; i++) { 
-        if (types[i].name === slotType) { 
-            slotValuesFull = types[i].values; 
-        } 
-    } 
- 
- 
-    examples.push(slotValuesFull[0].name.value); 
-    examples.push(slotValuesFull[1].name.value); 
-    if (slotValuesFull.length > 2) { 
-        examples.push(slotValuesFull[2].name.value); 
-    } 
- 
- 
-    return examples; 
-} 
- 
-function sayArray(myData, penultimateWord = 'and') { 
-    let result = ''; 
- 
-    myData.forEach(function(element, index, arr) { 
- 
-        if (index === 0) { 
-            result = element; 
-        } else if (index === myData.length - 1) { 
-            result += ` ${penultimateWord} ${element}`; 
-        } else { 
-            result += `, ${element}`; 
-        } 
-    }); 
-    return result; 
-} 
+ //written by Amazon default.
 function supportsDisplay(handlerInput) // returns true if the skill is running on a device with a display (Echo Show, Echo Spot, etc.) 
 {                                      //  Enable your skill for display as shown here: https://alexa.design/enabledisplay 
     const hasDisplay = 
@@ -703,26 +672,8 @@ function supportsDisplay(handlerInput) // returns true if the skill is running o
         handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display; 
  
     return hasDisplay; 
-} 
- 
- 
-const welcomeCardImg = { 
-    smallImageUrl: "https://s3.amazonaws.com/skill-images-789/cards/card_plane720_480.png", 
-    largeImageUrl: "https://s3.amazonaws.com/skill-images-789/cards/card_plane1200_800.png" 
- 
- 
-}; 
- 
-const DisplayImg1 = { 
-    title: 'Jet Plane', 
-    url: 'https://s3.amazonaws.com/skill-images-789/display/plane340_340.png' 
-}; 
-const DisplayImg2 = { 
-    title: 'Starry Sky', 
-    url: 'https://s3.amazonaws.com/skill-images-789/display/background1024_600.png' 
- 
-}; 
- 
+}
+ //written by Amazon default.
 function getCustomIntents() { 
     const modelIntents = model.interactionModel.languageModel.intents; 
  
@@ -737,13 +688,13 @@ function getCustomIntents() {
     } 
     return customIntents; 
 } 
- 
+ //written by Amazon default.
 function getSampleUtterance(intent) { 
  
     return randomElement(intent.samples); 
  
 } 
- 
+ //written by Amazon default.
 function getPreviousIntent(attrs) { 
  
     if (attrs.history && attrs.history.length > 1) { 
@@ -754,7 +705,7 @@ function getPreviousIntent(attrs) {
     } 
  
 } 
- 
+ //written by Amazon default.
 function getPreviousSpeechOutput(attrs) { 
  
     if (attrs.lastSpeechOutput && attrs.history.length > 1) { 
@@ -765,34 +716,7 @@ function getPreviousSpeechOutput(attrs) {
     } 
  
 } 
- 
-function timeDelta(t1, t2) { 
- 
-    const dt1 = new Date(t1); 
-    const dt2 = new Date(t2); 
-    const timeSpanMS = dt2.getTime() - dt1.getTime(); 
-    const span = { 
-        "timeSpanMIN": Math.floor(timeSpanMS / (1000 * 60 )), 
-        "timeSpanHR": Math.floor(timeSpanMS / (1000 * 60 * 60)), 
-        "timeSpanDAY": Math.floor(timeSpanMS / (1000 * 60 * 60 * 24)), 
-        "timeSpanDesc" : "" 
-    }; 
- 
- 
-    if (span.timeSpanHR < 2) { 
-        span.timeSpanDesc = span.timeSpanMIN + " minutes"; 
-    } else if (span.timeSpanDAY < 2) { 
-        span.timeSpanDesc = span.timeSpanHR + " hours"; 
-    } else { 
-        span.timeSpanDesc = span.timeSpanDAY + " days"; 
-    } 
- 
- 
-    return span; 
- 
-} 
- 
- 
+ //written by Amazon default.
 const InitMemoryAttributesInterceptor = { 
     process(handlerInput) { 
         let sessionAttributes = {}; 
@@ -817,7 +741,7 @@ const InitMemoryAttributesInterceptor = {
         } 
     } 
 }; 
- 
+ //written by Amazon default.
 const RequestHistoryInterceptor = { 
     process(handlerInput) { 
  
@@ -866,7 +790,7 @@ const RequestHistoryInterceptor = {
  
  
  
- 
+ //written by Amazon default.
 const RequestPersistenceInterceptor = { 
     process(handlerInput) { 
  
@@ -899,7 +823,7 @@ const RequestPersistenceInterceptor = {
     } 
 }; 
  
- 
+ //written by Amazon default.
 const ResponseRecordSpeechOutputInterceptor = { 
     process(handlerInput, responseOutput) { 
  
@@ -915,7 +839,7 @@ const ResponseRecordSpeechOutputInterceptor = {
  
     } 
 }; 
- 
+ //written by Amazon default.
 const ResponsePersistenceInterceptor = { 
     process(handlerInput, responseOutput) { 
  
