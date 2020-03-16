@@ -17,4 +17,6 @@ After the restaurant owner is done setting up all of their menus in the database
 #### Running transform.js
 
 > node transform.js input.json
+
+
 This will output as out.json.
