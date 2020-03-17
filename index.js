@@ -28,16 +28,15 @@ const drinkMenu = jsonParser(jsonDrinkMenu);
 
 //for our build order functionality
 var currentOrder = [];
-
-
 var categories = [];
 var catIndex = 0;
+//ListOfCategories:fills the categories array with the appropriate category 
+//Author:Max
 function ListOfCategories() {
     for (var i = 0; i < dinnerMenu.items.length; i++) {
         if (categories.length == 0) {
             categories[catIndex] = dinnerMenu.items[i].category;
             catIndex += 1;
-            //console.log(dinnerMenu.items[i].category);
         }
         else{
             var alreadyIn = 0;
@@ -57,7 +56,6 @@ function ListOfCategories() {
         if (categories.length == 0) {
             categories[catIndex] = drinkMenu.items[i].category;
             catIndex += 1;
-            //console.log(dinnerMenu.items[i].category);
         }
         else{
             var alreadyIn = 0;
@@ -76,7 +74,8 @@ function ListOfCategories() {
     
 }
 
-//this will return an object based on a text string match with the name of the item
+//FindItem:this will return an object based on a text string match with the name of the item
+//Author:Max
 function FindItem(itemName){
     for (var i = 0; i < dinnerMenu.items.length; i++) {
         if(dinnerMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
@@ -90,15 +89,31 @@ function FindItem(itemName){
     }
 }
 
+//GetPrice: returns the price of an item
+//Author: Max
 function GetPrice(itemObject){
     return itemObject.price;
 }
-
+//AddToOrder: adds item to current order
+//Author:Max
 function AddToOrder(itemObject){
-    var lenOfOrder = currentOrder.length;
-    currentOrder[lenOfOrder] = itemObject;
+    currentOrder.push(itemObject);
 }
-
+//RemoveFromOrder: removes an item from the current order
+//Author: Jack,Max
+function RemoveFromOrder(itemObject){
+    let newOrder = []
+    for (let i = 0; i < currentOrder.length; i++) {
+        if (currentOrder[i] !== itemObject) {
+            newOrder.push(currentOrder[i])
+        }
+    }
+    let result = currentOrder !== newOrder;
+    currentOrder = newOrder
+    return result;
+}
+//ReadCurrentOrder: reads back the current order
+//Author: Jack,Max
 function ReadCurrentOrder(){
     let say = "";
     if(currentOrder.length == 0){
@@ -114,7 +129,7 @@ function ReadCurrentOrder(){
 /////////////////////////////////////////////////////////////////////////////////
 //END GET LIST OF CATEGORIES
 
-
+//Amazon default function
 function getMemoryAttributes() {   const memoryAttributes = {
        "history":[],
 
@@ -145,6 +160,7 @@ const maxHistorySize = 20; // remember only latest 20 intents
 
 // 1. Intent Handlers =============================================
 
+//written by Amazon default.
 const AMAZON_FallbackIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -164,6 +180,7 @@ const AMAZON_FallbackIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_CancelIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -184,6 +201,7 @@ const AMAZON_CancelIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_HelpIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -199,12 +217,6 @@ const AMAZON_HelpIntent_Handler =  {
 
         let say = 'You asked for help. '; 
 
-        // let previousIntent = getPreviousIntent(sessionAttributes);
-        // if (previousIntent && !handlerInput.requestEnvelope.session.new) {
-        //     say += 'Your last intent was ' + previousIntent + '. ';
-        // }
-        // say +=  'I understand  ' + intents.length + ' intents, '
-
         say += ' Here something you can ask me, ' + getSampleUtterance(sampleIntent);
 
         return responseBuilder
@@ -214,6 +226,7 @@ const AMAZON_HelpIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_StopIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -234,6 +247,7 @@ const AMAZON_StopIntent_Handler =  {
     },
 };
 
+//written by Amazon default.
 const AMAZON_NavigateHomeIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -254,6 +268,8 @@ const AMAZON_NavigateHomeIntent_Handler =  {
     },
 };
 
+//ReadMenu_Handler: will read back the items in a category or entire menu.
+//Author: Alexa Development team.
 const ReadMenu_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -280,15 +296,12 @@ const ReadMenu_Handler =  {
         
         // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
 
-        // console.log('***** slotValues: ' +  JSON.stringify(slotValues, null, 2));
         //   SLOT: category 
         
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
             if(slotValues.category.resolved=="drinks"){
                 var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
-                // for (var i = 0; i < drinkMenu.items.length; i++) {
-                //     listOfDrinks += drinkMenu.items[i].name + ", "
-                // }
+ 
                 say = "Here are the drinks I found: "+ listOfDrinks;
             }
             else{
@@ -301,65 +314,14 @@ const ReadMenu_Handler =  {
             //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
             var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => item.name).join(", ");
             
-            
-            say = elseMenu.length > 0 ? "Here are the " + slotValues.category.heardAs +" I found: "+ elseMenu : "I found no " + slotValues.category.heardAs + " items";
+            if (elseMenu.length > 0) {
+                say = "Here are the " + slotValues.category.heardAs +" I found: "+ elseMenu
+            } else {
+                say = "I found no " + slotValues.category.heardAs + " items";
+            }
+                
         }
         
-        // else if(slotValues.category.resolved=="appetizers"){
-        //     var listOfApps = " ";
-        //     for (var i = 0; i < dinnerMenu.items.length; i++) {
-        //         if(dinnerMenu.items[i].category == "Appetizers"){
-        //             listOfApps += dinnerMenu.items[i].name + ", "
-        //         }
-        //     }
-        //     say = "Here are the appetizers I found: "+ listOfApps;
-        // }
-        // else if(slotValues.category.resolved=="entrees"){
-        //     var listOfEntrees = " ";
-        //     for (var i = 0; i < dinnerMenu.items.length; i++) {
-        //         if(dinnerMenu.items[i].category == "Burgers"){
-        //             listOfEntrees += dinnerMenu.items[i].name + ", "
-        //         }
-        //     }
-        //     say = "Here are the entrees I found: "+ listOfEntrees;
-        // }
-
-        // //if (slotValues.category.heardAs) {
-        // //    slotStatus += ' slot category was heard as ' + slotValues.category.heardAs + '. ';
-        // //}
-        
-        // //otherwise if the slot category is empty, just read all items on menu.
-        //  else {
-        //     //slotStatus += 'slot category is empty. ';
-        //     var listOfItems = " ";
-        //     for(var i = 0; i < dinnerMenu.items.length; i++){
-        //         listOfItems+=dinnerMenu.items[i].name + ", ";
-        //     }
-        //     for(var i = 0; i < drinkMenu.items.length; i++){
-        //         listOfItems+=drinkMenu.items[i].name + ", ";
-        //     }
-        //     say = "Here are the items on the menu: " + listOfItems;
-        // }
-        
-        
-        // if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-        //     slotStatus += 'a valid ';
-        //     if(slotValues.category.resolved !== slotValues.category.heardAs) {
-        //         slotStatus += 'synonym for ' + slotValues.category.resolved + '. '; 
-        //         } else {
-        //         slotStatus += 'match. '
-        //     } // else {
-        //         //
-        // }
-        // if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-        //     slotStatus += 'which did not match any slot value. ';
-        //     console.log('***** consider adding "' + slotValues.category.heardAs + '" to the custom slot type used by slot category! '); 
-        // }
-
-        // if( (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') ||  (!slotValues.category.heardAs) ) {
-        //     slotStatus += 'A few valid values are, ' + sayArray(getExampleSlotValues('ReadMenu','category'), 'or');
-        // }
-
         say += slotStatus;
 
 
@@ -369,7 +331,8 @@ const ReadMenu_Handler =  {
             .getResponse();
     },
 };
-
+//Pricing_Handler: Gets the price of a slotValue.
+//Author: Jack,Max.
 const Pricing_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -425,6 +388,8 @@ const Pricing_Handler =  {
     },
 };
 
+//BuildOrder_Handler: builds up an order to send to the chef.
+//Author: Zack, Max.
 const BuildOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -443,11 +408,12 @@ const BuildOrder_Handler =  {
 
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            AddToOrder(FindItem(slotValues.item.heardAs));
-            say = "successfully added " +slotValues.item.heardAs +" to order";//ReadCurrentOrder();
-            say += "your have " + ReadCurrentOrder() +" in your order so far";
+            AddToOrder(FindItem(slotValues.item.resolved));
+            say = "successfully added " +slotValues.item.heardAs +" to order";
+            
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+            //do based on .heardAs
             slotStatus += 'which did not match any slot value. ';
             console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         }
@@ -462,6 +428,8 @@ const BuildOrder_Handler =  {
     },
 };
 
+//PlaceOrder_Handler:Places an order to the chef.
+//Author:Alexa Development team.
 const PlaceOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -481,7 +449,101 @@ const PlaceOrder_Handler =  {
             .getResponse();
     },
 };
+//PriceOfOrder_Handler:iterates through the current order and gives the total price.
+//Author:Jack,Max.
+const PriceOfOrder_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'PriceOfOrder' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let currentPrice = 0;
+        currentOrder.forEach(item => {
+            currentPrice += item.price;
+        });
 
+        let say = "The current price of your order is $" + currentPrice;
+
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
+//ReadCurrentOrder_Handler:Reads back the number of items in the current order.
+//Author:Jack, Max.
+const ReadCurrentOrder_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'ReadCurrentOrder' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+        let say = "you have " + ReadCurrentOrder() +" in your order so far";
+
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
+//RemoveItem_Handler:Removes an item from the current order.
+//Author:Jack, Max.
+const RemoveItem_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'RemoveItem' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let slotValues = getSlotValues(request.intent.slots); 
+        let say = '';
+
+        let slotStatus = '';
+        let resolvedSlot;
+
+
+        if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
+            RemoveFromOrder(FindItem(slotValues.item.heardAs));
+            
+            if (RemoveFromOrder(slotValues.item.resolved)) {
+                say = "successfully removed " +slotValues.item.heardAs +" from order";
+            } else {
+                say = "I could not find " + slotValues.item.heardAs +" in your order";
+            }
+        }
+        if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+            slotStatus += 'which did not match any slot value. ';
+            console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
+        }
+        
+        
+
+        say += slotStatus;
+
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
+//written by Amazon default.
 const LaunchRequest_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -492,16 +554,12 @@ const LaunchRequest_Handler =  {
 
         let say = 'hello' + ' and welcome to ' + invocationName + ' ! Say help to hear some options.';
 
-        let skillTitle = capitalize(invocationName);
 
 
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
-            .withStandardCard('Welcome!', 
-              'Hello!\nThis is a card for your skill, ' + skillTitle,
-               welcomeCardImg.smallImageUrl, welcomeCardImg.largeImageUrl)
-            .getResponse();
+              .getResponse();
     },
 };
 
@@ -516,6 +574,7 @@ const SessionEndedHandler =  {
     }
 };
 
+//written by Amazon default.
 const ErrorHandler =  {
     canHandle() {
         return true;
@@ -544,24 +603,24 @@ const ErrorHandler =  {
 const APP_ID = undefined;  // TODO replace with your Skill ID (OPTIONAL).
 
 // 3.  Helper Functions ===================================================================
-
+//written by Amazon default.
 function capitalize(myString) {
 
      return myString.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) ;
 }
-
- 
+//written by Amazon default.
 function randomElement(myArray) { 
     return(myArray[Math.floor(Math.random() * myArray.length)]); 
 } 
  
+ //written by Amazon default.
 function stripSpeak(str) { 
     return(str.replace('<speak>', '').replace('</speak>', '')); 
 } 
  
  
  
- 
+ //written by Amazon default.
 function getSlotValues(filledSlots) { 
     const slotValues = {}; 
  
@@ -602,59 +661,7 @@ function getSlotValues(filledSlots) {
  
     return slotValues; 
 } 
- 
-function getExampleSlotValues(intentName, slotName) { 
- 
-    let examples = []; 
-    let slotType = ''; 
-    let slotValuesFull = []; 
- 
-    let intents = model.interactionModel.languageModel.intents; 
-    for (let i = 0; i < intents.length; i++) { 
-        if (intents[i].name == intentName) { 
-            let slots = intents[i].slots; 
-            for (let j = 0; j < slots.length; j++) { 
-                if (slots[j].name === slotName) { 
-                    slotType = slots[j].type; 
- 
-                } 
-            } 
-        } 
-         
-    } 
-    let types = model.interactionModel.languageModel.types; 
-    for (let i = 0; i < types.length; i++) { 
-        if (types[i].name === slotType) { 
-            slotValuesFull = types[i].values; 
-        } 
-    } 
- 
- 
-    examples.push(slotValuesFull[0].name.value); 
-    examples.push(slotValuesFull[1].name.value); 
-    if (slotValuesFull.length > 2) { 
-        examples.push(slotValuesFull[2].name.value); 
-    } 
- 
- 
-    return examples; 
-} 
- 
-function sayArray(myData, penultimateWord = 'and') { 
-    let result = ''; 
- 
-    myData.forEach(function(element, index, arr) { 
- 
-        if (index === 0) { 
-            result = element; 
-        } else if (index === myData.length - 1) { 
-            result += ` ${penultimateWord} ${element}`; 
-        } else { 
-            result += `, ${element}`; 
-        } 
-    }); 
-    return result; 
-} 
+ //written by Amazon default.
 function supportsDisplay(handlerInput) // returns true if the skill is running on a device with a display (Echo Show, Echo Spot, etc.) 
 {                                      //  Enable your skill for display as shown here: https://alexa.design/enabledisplay 
     const hasDisplay = 
@@ -665,26 +672,8 @@ function supportsDisplay(handlerInput) // returns true if the skill is running o
         handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display; 
  
     return hasDisplay; 
-} 
- 
- 
-const welcomeCardImg = { 
-    smallImageUrl: "https://s3.amazonaws.com/skill-images-789/cards/card_plane720_480.png", 
-    largeImageUrl: "https://s3.amazonaws.com/skill-images-789/cards/card_plane1200_800.png" 
- 
- 
-}; 
- 
-const DisplayImg1 = { 
-    title: 'Jet Plane', 
-    url: 'https://s3.amazonaws.com/skill-images-789/display/plane340_340.png' 
-}; 
-const DisplayImg2 = { 
-    title: 'Starry Sky', 
-    url: 'https://s3.amazonaws.com/skill-images-789/display/background1024_600.png' 
- 
-}; 
- 
+}
+ //written by Amazon default.
 function getCustomIntents() { 
     const modelIntents = model.interactionModel.languageModel.intents; 
  
@@ -699,13 +688,13 @@ function getCustomIntents() {
     } 
     return customIntents; 
 } 
- 
+ //written by Amazon default.
 function getSampleUtterance(intent) { 
  
     return randomElement(intent.samples); 
  
 } 
- 
+ //written by Amazon default.
 function getPreviousIntent(attrs) { 
  
     if (attrs.history && attrs.history.length > 1) { 
@@ -716,7 +705,7 @@ function getPreviousIntent(attrs) {
     } 
  
 } 
- 
+ //written by Amazon default.
 function getPreviousSpeechOutput(attrs) { 
  
     if (attrs.lastSpeechOutput && attrs.history.length > 1) { 
@@ -727,34 +716,7 @@ function getPreviousSpeechOutput(attrs) {
     } 
  
 } 
- 
-function timeDelta(t1, t2) { 
- 
-    const dt1 = new Date(t1); 
-    const dt2 = new Date(t2); 
-    const timeSpanMS = dt2.getTime() - dt1.getTime(); 
-    const span = { 
-        "timeSpanMIN": Math.floor(timeSpanMS / (1000 * 60 )), 
-        "timeSpanHR": Math.floor(timeSpanMS / (1000 * 60 * 60)), 
-        "timeSpanDAY": Math.floor(timeSpanMS / (1000 * 60 * 60 * 24)), 
-        "timeSpanDesc" : "" 
-    }; 
- 
- 
-    if (span.timeSpanHR < 2) { 
-        span.timeSpanDesc = span.timeSpanMIN + " minutes"; 
-    } else if (span.timeSpanDAY < 2) { 
-        span.timeSpanDesc = span.timeSpanHR + " hours"; 
-    } else { 
-        span.timeSpanDesc = span.timeSpanDAY + " days"; 
-    } 
- 
- 
-    return span; 
- 
-} 
- 
- 
+ //written by Amazon default.
 const InitMemoryAttributesInterceptor = { 
     process(handlerInput) { 
         let sessionAttributes = {}; 
@@ -779,7 +741,7 @@ const InitMemoryAttributesInterceptor = {
         } 
     } 
 }; 
- 
+ //written by Amazon default.
 const RequestHistoryInterceptor = { 
     process(handlerInput) { 
  
@@ -828,7 +790,7 @@ const RequestHistoryInterceptor = {
  
  
  
- 
+ //written by Amazon default.
 const RequestPersistenceInterceptor = { 
     process(handlerInput) { 
  
@@ -861,7 +823,7 @@ const RequestPersistenceInterceptor = {
     } 
 }; 
  
- 
+ //written by Amazon default.
 const ResponseRecordSpeechOutputInterceptor = { 
     process(handlerInput, responseOutput) { 
  
@@ -877,7 +839,7 @@ const ResponseRecordSpeechOutputInterceptor = {
  
     } 
 }; 
- 
+ //written by Amazon default.
 const ResponsePersistenceInterceptor = { 
     process(handlerInput, responseOutput) { 
  
@@ -922,6 +884,9 @@ exports.handler = skillBuilder
         Pricing_Handler, 
         BuildOrder_Handler, 
         PlaceOrder_Handler, 
+        PriceOfOrder_Handler, 
+        ReadCurrentOrder_Handler, 
+        RemoveItem_Handler, 
         LaunchRequest_Handler, 
         SessionEndedHandler
     )
@@ -943,228 +908,287 @@ exports.handler = skillBuilder
 // End of Skill code -------------------------------------------------------------
 // Static Language Model for reference
 
-
 const model = {
-    "interactionModel": {
-        "languageModel": {
-            "invocationName": "auto garcon",
-            "intents": [
-                {
-                    "name": "AMAZON.FallbackIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.CancelIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.HelpIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.StopIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.NavigateHomeIntent",
-                    "samples": []
-                },
-                {
-                    "name": "ReadMenu",
-                    "slots": [
-                        {
-                            "name": "category",
-                            "type": "category"
-                        }
-                    ],
-                    "samples": [
-                        "what do you have for {category}",
-                        "what are your {category}",
-                        "read me the {category} options",
-                        "read me the {category} menu",
-                        "read me the {category}",
-                        "what's on the menu",
-                        "read me the menu",
-                        "read menu"
-                    ]
-                },
-                {
-                    "name": "Pricing",
-                    "slots": [
-                        {
-                            "name": "item",
-                            "type": "item"
-                        },
-                        {
-                            "name": "category",
-                            "type": "category"
-                        }
-                    ],
-                    "samples": [
-                        "how much are your {category}",
-                        "how much is {item}",
-                        "how much does {item} cost",
-                        "what's the price of {item}"
-                    ]
-                },
-                {
-                    "name": "BuildOrder",
-                    "slots": [
-                        {
-                            "name": "item",
-                            "type": "item"
-                        }
-                    ],
-                    "samples": [
-                        "add {item} to order",
-                        "order {item}"
-                    ]
-                },
-                {
-                    "name": "PlaceOrder",
-                    "slots": [],
-                    "samples": [
-                        "send order to kitchen",
-                        "place order"
-                    ]
-                }
-            ],
-            "types": [
-                {
-                    "name": "category",
-                    "values": [
-                        {
-                            "name": {
-                                "value": "baked goods"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "beers",
-                                "synonyms": [
-                                    "beer"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "gluten free"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "vegan",
-                                "synonyms": [
-                                    "vegetarian",
-                                    "meatless"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "sides"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "sandwiches"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "soups"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "tests"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "drinks",
-                                "synonyms": [
-                                    "beverages"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "desserts"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "entrees"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "appetizers",
-                                "synonyms": [
-                                    "apps",
-                                    "starters"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "item",
-                    "values": [
-                        {
-                            "name": {
-                                "value": "Pinot noir"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Merlot"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Summit IPA"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Ham's"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Corona"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Cowboy Burger"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Black Bean Burger"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Mini Tacos"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Cheesecurds"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "water"
-                            }
-                        }
-                    ]
-                }
-            ]
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "auto garcon",
+      "intents": [
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "ReadMenu",
+          "slots": [
+            {
+              "name": "category",
+              "type": "category"
+            }
+          ],
+          "samples": [
+            "what {category} are on the menu",
+            "what {category} is on the menu",
+            "what {category} do you have",
+            "what do you have for {category}",
+            "what are your {category}",
+            "read me the {category} options",
+            "read me the {category} menu",
+            "read me the {category}",
+            "what's on the menu",
+            "read me the menu",
+            "read menu"
+          ]
+        },
+        {
+          "name": "Pricing",
+          "slots": [
+            {
+              "name": "item",
+              "type": "item"
+            },
+            {
+              "name": "category",
+              "type": "category"
+            }
+          ],
+          "samples": [
+            "how much are {item}",
+            "how much are your {category}",
+            "how much is {item}",
+            "how much does {item} cost",
+            "what's the price of {item}"
+          ]
+        },
+        {
+          "name": "BuildOrder",
+          "slots": [
+            {
+              "name": "item",
+              "type": "item"
+            }
+          ],
+          "samples": [
+            "I'll have a {item}",
+            "order me a {item}",
+            "order me the {item}",
+            "i'd like a {item}",
+            "add {item} to order",
+            "order {item}"
+          ]
+        },
+        {
+          "name": "PlaceOrder",
+          "slots": [],
+          "samples": [
+            "send the order",
+            "confirm the order",
+            "place the order",
+            "send order to kitchen",
+            "place order"
+          ]
+        },
+        {
+          "name": "PriceOfOrder",
+          "slots": [],
+          "samples": [
+            "how much is all this",
+            "how much is everything",
+            "what is my total at",
+            "how much is my total",
+            "what's the total cost",
+            "total cost",
+            "how much does my food cost",
+            "how much is my meal",
+            "what's my total",
+            "order price",
+            "current price",
+            "what is the current price of my order"
+          ]
+        },
+        {
+          "name": "ReadCurrentOrder",
+          "slots": [],
+          "samples": [
+            "read the order",
+            "read me my order",
+            "read me back my order",
+            "what is in the order",
+            "what items are in the order",
+            "what items are in my order",
+            "what is my order",
+            "what's in my order"
+          ]
+        },
+        {
+          "name": "RemoveItem",
+          "slots": [
+            {
+              "name": "item",
+              "type": "item"
+            }
+          ],
+          "samples": [
+            "delete {item}",
+            "remove {item}",
+            "remove {item} from order"
+          ]
+        },
+        {
+          "name": "LaunchRequest"
         }
+      ],
+      "types": [
+        {
+          "name": "category",
+          "values": [
+            {
+              "name": {
+                "value": "baked goods"
+              }
+            },
+            {
+              "name": {
+                "value": "beers",
+                "synonyms": [
+                  "beer"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "gluten free"
+              }
+            },
+            {
+              "name": {
+                "value": "vegan",
+                "synonyms": [
+                  "vegetarian",
+                  "meatless"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "sides"
+              }
+            },
+            {
+              "name": {
+                "value": "sandwiches"
+              }
+            },
+            {
+              "name": {
+                "value": "soups"
+              }
+            },
+            {
+              "name": {
+                "value": "tests"
+              }
+            },
+            {
+              "name": {
+                "value": "drinks",
+                "synonyms": [
+                  "beverages"
+                ]
+              }
+            },
+            {
+              "name": {
+                "value": "desserts"
+              }
+            },
+            {
+              "name": {
+                "value": "entrees"
+              }
+            },
+            {
+              "name": {
+                "value": "appetizers",
+                "synonyms": [
+                  "apps",
+                  "starters"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "item",
+          "values": [
+            {
+              "name": {
+                "value": "Pinot noir"
+              }
+            },
+            {
+              "name": {
+                "value": "Merlot"
+              }
+            },
+            {
+              "name": {
+                "value": "Summit IPA"
+              }
+            },
+            {
+              "name": {
+                "value": "Ham's"
+              }
+            },
+            {
+              "name": {
+                "value": "Corona"
+              }
+            },
+            {
+              "name": {
+                "value": "Cowboy Burger"
+              }
+            },
+            {
+              "name": {
+                "value": "Black Bean Burger"
+              }
+            },
+            {
+              "name": {
+                "value": "Mini Tacos"
+              }
+            },
+            {
+              "name": {
+                "value": "Cheesecurds"
+              }
+            },
+            {
+              "name": {
+                "value": "water"
+              }
+            }
+          ]
+        }
+      ]
     }
-}
+  }
+};
