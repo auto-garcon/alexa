@@ -1,0 +1,472 @@
+{
+    "items": [
+        {
+            "category": "Appetizers",
+            "name": "Cheese Curds",
+            "description": "yummy, gooey wisconson cheese deepfried in pig oil batter and served with a dollop of house sause",
+            "price": 5.50,
+            "allergens": [
+                "peanuts",
+                "vegetarian",
+                "lactose"
+            ]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Mini Tacos",
+            "price": 7.50,
+            "description": "bite-sized Mexico"
+        },
+        {
+            "category": "Burgers",
+            "name": "Black Bean Burger",
+            "price": 9.5,
+            "description": "organic black bean burger topped with carrots, fries, and horse radish",
+            "allergens":[
+                "vegan"
+            ]
+        },
+        {
+            "category": "Burgers",
+            "name": "Cowboy",
+            "price": 6.50,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Burger",
+            "name": "California",
+            "price": 6.25,
+            "description": "Fresh Beef Patty, American Cheese, Cucumber, Avocado Mayo",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Burger",
+            "name": "Classic Hamburger",
+            "price": 5.50,
+            "description": "Fresh Beef Patty, choice of Cheese for +50 cents",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Burger",
+            "name": "Double",
+            "price": 8.50,
+            "description": "Two Fresh Beef Patty, choice of Cheese for +50 cents",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Burger",
+            "name": "Turkey",
+            "price": 6.25,
+            "description": "Turkey Burger, Fresh Herbs, Spices",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Burger",
+            "name": "Tex-Mex",
+            "price": 6.25,
+            "description": "Fresh Beef Patty, Pepper Jack, Pico de Gallo, Chipotle Mayo",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Burger",
+            "name": "Peanut Butter Bacon",
+            "price": 6.50,
+            "description": "Fresh Beef Patty, Peanut Butter, Bacon SLices, Sauteed Onions",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Burger",
+            "name": "Gouda Bacon",
+            "price": 6.50,
+            "description": "Fresh Beef Patty, Smoky Aioli & Gouda, Sauteed Onions, Bacon",
+            "allergens":[
+                "meat",
+                "lactose"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Cesar Wrap",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Entree",
+            "name": "Zesty Melt",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Quesadilla",
+            "price": 5.5,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Blooming Onion",
+            "price": 12,
+            "description": "some good shit",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Onion Rings",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "French Fries",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Nachos",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Chicken Strips",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Wings",
+            "name": "Teriaki Wings",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Wings",
+            "name": "Samari Wings",
+            "price": 12,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Traditional Tots",
+            "price": 3.95,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Ranch Tots",
+            "price": 3.95,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Cajun Tots",
+            "price": 2.95,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Chicken Strips",
+            "price": 5.25,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Buffalo Strips",
+            "price": 5.25,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Mozzarella Sticks",
+            "price": 5.35,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Cheese Quesadilla",
+            "price": 5.25,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Chicken Quesadilla",
+            "price": 7,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizer",
+            "name": "Loaded Nachos",
+            "price": 8.85,
+            "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Paninis",
+            "name": "Grilled Cheese",
+            "price": 4.5,
+            "description": "Rosemary Bread with your choise of Cheese",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Paninis",
+            "name": "Caprese Grilled Cheese",
+            "price": 6.25,
+            "description": "Rosemary Bread, Mozzarella, Tomato, Basil, Balsamic Glaze",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Paninis",
+            "name": "Chicken Avocado",
+            "price": 6.25,
+            "description": "Rosemary Bread, Chicken, Gouda, Avocado Mayo, Spinach",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Hot Sandwhiches",
+            "name": "Chicken Parmesan",
+            "price": 6.25,
+            "description": "Fried or Grilled Chicken, Tomatoes, Melted Mozzarella, Garlic Spread on an Artisan Bun",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Hot Sandwhiches",
+            "name": "Italian",
+            "price": 6.25,
+            "description": "Fried or Grilled Chicken, Lettuce, Tomatoes, Chipotle Mayo, Garlic Spread on an Artisan Bun",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Hot Sandwhiches",
+            "name": "Italian",
+            "price": 6.25,
+            "description": "Pepperoni, Salami, Capicola, Provolone, Onions, Lettuce, Mayo, Garlic Spread, and Italian Vinaigrette on an Artisan Bun",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Bacon Chicken Ranch",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Bacon, Chicken, Grape Tomatoes, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Bacon Chicken Chipotle",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Bacon, Chicken, Pepper Jack, Grape Tomatoes, Chipotle Mayo",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Chicken Caesar",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Chicken, Croutons, Shaved Parmesan, Caesar Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Mandarin Chicken",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Chicken, Mandarin Oranges, Red Peppers & Onions, Wonton Strips, Sesame Seeds, Citrus Vinaigrette",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Firecracker",
+            "price": 5.95,
+            "description": "Jalapeno Wrap, Monterey Jack, Romaine, Chicken, Cucumber, Cherry Tomatoes, Buffalo Sause, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Bacon Chicken Ranch",
+            "price": 7.50,
+            "description": "Romaine, Bacon, Chicken, Grape Tomatoes, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Bacon Chicken Chipotle",
+            "price": 7.50,
+            "description": "Romaine, Bacon, Chicken, Grape Tomatoes, Chipotle Mayo Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Chicken Caesar",
+            "price": 7.50,
+            "description": "Romaine, Chicken, Shaved Parmesan, Croutons",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Mandarin Chicken",
+            "price": 7.50,
+            "description": "Romaine, Chicken, Mandarin Oranges, Red Onion & Pepper, Sesame Seeds, Wonton Strips, Citrus Vinaigrette Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Firecracker",
+            "price": 7.50,
+            "description": "Romaine, Monterey Jack, Chicken, Cucumbers, Grape Tomatoes, Buffalo Sause, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "House",
+            "price": 7.50,
+            "description": "Romaine, Cucumbers, Chicken, Grape Tomatoes, Red Onions, Italian Vinaigrette",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Street Tacos",
+            "name": "Pork Carnitas",
+            "price": 6.00,
+            "description": "Three Seasoned Pork Tacos, Diced Onions, Fresh Cilantro, Salsa on Corn Tortillas, served with Tortilla Chips",
+            "allergens":[
+                "pork"
+            ]
+        },
+        {
+            "category": "Street Tacos",
+            "name": "Beef Barbacoa",
+            "price": 6.00,
+            "description": "Three Seasoned Shredded Beef Tacos, Diced ONions, Fresh Cilantro, Salsa, on Corn Tortillas served with Tortillas Chips",
+            "allergens":[
+                "meat"
+            ]
+        }
+
+    ]
+}
