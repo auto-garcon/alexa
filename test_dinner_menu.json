@@ -122,7 +122,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Quesadilla",
             "price": 5.5,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -131,7 +131,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Blooming Onion",
             "price": 12,
             "description": "some good shit",
@@ -141,7 +141,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Onion Rings",
             "price": 12,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -151,7 +151,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "French Fries",
             "price": 12,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -161,7 +161,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Nachos",
             "price": 12,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -171,7 +171,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Chicken Strips",
             "price": 12,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -192,7 +192,7 @@
         },
         {
             "category": "Wings",
-            "name": "Samari Wings",
+            "name": "Samurai Wings",
             "price": 12,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
             "allergens":[
@@ -201,7 +201,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Traditional Tots",
             "price": 3.95,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -211,7 +211,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Ranch Tots",
             "price": 3.95,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -221,7 +221,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Cajun Tots",
             "price": 2.95,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -231,7 +231,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Chicken Strips",
             "price": 5.25,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -241,7 +241,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Buffalo Strips",
             "price": 5.25,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -251,7 +251,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Mozzarella Sticks",
             "price": 5.35,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -261,7 +261,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Cheese Quesadilla",
             "price": 5.25,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -271,7 +271,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Chicken Quesadilla",
             "price": 7,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -281,7 +281,7 @@
             ]
         },
         {
-            "category": "Appetizer",
+            "category": "Appetizers",
             "name": "Loaded Nachos",
             "price": 8.85,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
