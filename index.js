@@ -909,286 +909,459 @@ exports.handler = skillBuilder
 // Static Language Model for reference
 
 const model = {
-  "interactionModel": {
-    "languageModel": {
-      "invocationName": "auto garcon",
-      "intents": [
-        {
-          "name": "AMAZON.FallbackIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.CancelIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.HelpIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.StopIntent",
-          "samples": []
-        },
-        {
-          "name": "AMAZON.NavigateHomeIntent",
-          "samples": []
-        },
-        {
-          "name": "ReadMenu",
-          "slots": [
-            {
-              "name": "category",
-              "type": "category"
-            }
-          ],
-          "samples": [
-            "what {category} are on the menu",
-            "what {category} is on the menu",
-            "what {category} do you have",
-            "what do you have for {category}",
-            "what are your {category}",
-            "read me the {category} options",
-            "read me the {category} menu",
-            "read me the {category}",
-            "what's on the menu",
-            "read me the menu",
-            "read menu"
-          ]
-        },
-        {
-          "name": "Pricing",
-          "slots": [
-            {
-              "name": "item",
-              "type": "item"
-            },
-            {
-              "name": "category",
-              "type": "category"
-            }
-          ],
-          "samples": [
-            "how much are {item}",
-            "how much are your {category}",
-            "how much is {item}",
-            "how much does {item} cost",
-            "what's the price of {item}"
-          ]
-        },
-        {
-          "name": "BuildOrder",
-          "slots": [
-            {
-              "name": "item",
-              "type": "item"
-            }
-          ],
-          "samples": [
-            "I'll have a {item}",
-            "order me a {item}",
-            "order me the {item}",
-            "i'd like a {item}",
-            "add {item} to order",
-            "order {item}"
-          ]
-        },
-        {
-          "name": "PlaceOrder",
-          "slots": [],
-          "samples": [
-            "send the order",
-            "confirm the order",
-            "place the order",
-            "send order to kitchen",
-            "place order"
-          ]
-        },
-        {
-          "name": "PriceOfOrder",
-          "slots": [],
-          "samples": [
-            "how much is all this",
-            "how much is everything",
-            "what is my total at",
-            "how much is my total",
-            "what's the total cost",
-            "total cost",
-            "how much does my food cost",
-            "how much is my meal",
-            "what's my total",
-            "order price",
-            "current price",
-            "what is the current price of my order"
-          ]
-        },
-        {
-          "name": "ReadCurrentOrder",
-          "slots": [],
-          "samples": [
-            "read the order",
-            "read me my order",
-            "read me back my order",
-            "what is in the order",
-            "what items are in the order",
-            "what items are in my order",
-            "what is my order",
-            "what's in my order"
-          ]
-        },
-        {
-          "name": "RemoveItem",
-          "slots": [
-            {
-              "name": "item",
-              "type": "item"
-            }
-          ],
-          "samples": [
-            "delete {item}",
-            "remove {item}",
-            "remove {item} from order"
-          ]
-        },
-        {
-          "name": "LaunchRequest"
-        }
-      ],
-      "types": [
-        {
-          "name": "category",
-          "values": [
-            {
-              "name": {
-                "value": "baked goods"
-              }
-            },
-            {
-              "name": {
-                "value": "beers",
-                "synonyms": [
-                  "beer"
-                ]
-              }
-            },
-            {
-              "name": {
-                "value": "gluten free"
-              }
-            },
-            {
-              "name": {
-                "value": "vegan",
-                "synonyms": [
-                  "vegetarian",
-                  "meatless"
-                ]
-              }
-            },
-            {
-              "name": {
-                "value": "sides"
-              }
-            },
-            {
-              "name": {
-                "value": "sandwiches"
-              }
-            },
-            {
-              "name": {
-                "value": "soups"
-              }
-            },
-            {
-              "name": {
-                "value": "tests"
-              }
-            },
-            {
-              "name": {
-                "value": "drinks",
-                "synonyms": [
-                  "beverages"
-                ]
-              }
-            },
-            {
-              "name": {
-                "value": "desserts"
-              }
-            },
-            {
-              "name": {
-                "value": "entrees"
-              }
-            },
-            {
-              "name": {
-                "value": "appetizers",
-                "synonyms": [
-                  "apps",
-                  "starters"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "item",
-          "values": [
-            {
-              "name": {
-                "value": "Pinot noir"
-              }
-            },
-            {
-              "name": {
-                "value": "Merlot"
-              }
-            },
-            {
-              "name": {
-                "value": "Summit IPA"
-              }
-            },
-            {
-              "name": {
-                "value": "Ham's"
-              }
-            },
-            {
-              "name": {
-                "value": "Corona"
-              }
-            },
-            {
-              "name": {
-                "value": "Cowboy Burger"
-              }
-            },
-            {
-              "name": {
-                "value": "Black Bean Burger"
-              }
-            },
-            {
-              "name": {
-                "value": "Mini Tacos"
-              }
-            },
-            {
-              "name": {
-                "value": "Cheesecurds"
-              }
-            },
-            {
-              "name": {
-                "value": "water"
-              }
-            }
-          ]
-        }
-      ]
-    }
-  }
+	"interactionModel": {
+		"languageModel": {
+			"invocationName": "auto garcon",
+			"intents": [
+				{
+					"name": "AMAZON.FallbackIntent",
+					"samples": []
+				},
+				{
+					"name": "AMAZON.CancelIntent",
+					"samples": []
+				},
+				{
+					"name": "AMAZON.HelpIntent",
+					"samples": []
+				},
+				{
+					"name": "AMAZON.StopIntent",
+					"samples": []
+				},
+				{
+					"name": "AMAZON.NavigateHomeIntent",
+					"samples": []
+				},
+				{
+					"name": "ReadMenu",
+					"slots": [
+						{
+							"name": "category",
+							"type": "category"
+						}
+					],
+					"samples": [
+						"what {category} are on the menu",
+						"what {category} is on the menu",
+						"what {category} do you have",
+						"what do you have for {category}",
+						"what are your {category}",
+						"read me the {category} options",
+						"read me the {category} menu",
+						"read me the {category}",
+						"what's on the menu",
+						"read me the menu",
+						"read menu"
+					]
+				},
+				{
+					"name": "Pricing",
+					"slots": [
+						{
+							"name": "item",
+							"type": "item"
+						},
+						{
+							"name": "category",
+							"type": "category"
+						}
+					],
+					"samples": [
+						"how much are {item}",
+						"how much are your {category}",
+						"how much is {item}",
+						"how much does {item} cost",
+						"what's the price of {item}"
+					]
+				},
+				{
+					"name": "BuildOrder",
+					"slots": [
+						{
+							"name": "item",
+							"type": "item"
+						}
+					],
+					"samples": [
+						"I'll have a {item}",
+						"order me a {item}",
+						"order me the {item}",
+						"i'd like a {item}",
+						"add {item} to order",
+						"order {item}"
+					]
+				},
+				{
+					"name": "PlaceOrder",
+					"slots": [],
+					"samples": [
+						"send the order",
+						"confirm the order",
+						"place the order",
+						"send order to kitchen",
+						"place order"
+					]
+				},
+				{
+					"name": "PriceOfOrder",
+					"slots": [],
+					"samples": [
+						"how much is all this",
+						"how much is everything",
+						"what is my total at",
+						"how much is my total",
+						"what's the total cost",
+						"total cost",
+						"how much does my food cost",
+						"how much is my meal",
+						"what's my total",
+						"order price",
+						"current price",
+						"what is the current price of my order"
+					]
+				},
+				{
+					"name": "ReadCurrentOrder",
+					"slots": [],
+					"samples": [
+						"read the order",
+						"read me my order",
+						"read me back my order",
+						"what is in the order",
+						"what items are in the order",
+						"what items are in my order",
+						"what is my order",
+						"what's in my order"
+					]
+				},
+				{
+					"name": "RemoveItem",
+					"slots": [
+						{
+							"name": "item",
+							"type": "item"
+						}
+					],
+					"samples": [
+						"delete {item}",
+						"remove {item}",
+						"remove {item} from order"
+					]
+				}
+			],
+			"types": [
+				{
+					"name": "category",
+					"values": [
+						{
+							"name": {
+								"value": "Appetizers"
+							}
+						},
+						{
+							"name": {
+								"value": "Burgers"
+							}
+						},
+						{
+							"name": {
+								"value": "Burger"
+							}
+						},
+						{
+							"name": {
+								"value": "Wraps"
+							}
+						},
+						{
+							"name": {
+								"value": "Entree"
+							}
+						},
+						{
+							"name": {
+								"value": "Appetizer"
+							}
+						},
+						{
+							"name": {
+								"value": "Wings"
+							}
+						},
+						{
+							"name": {
+								"value": "Paninis"
+							}
+						},
+						{
+							"name": {
+								"value": "Hot Sandwhiches"
+							}
+						},
+						{
+							"name": {
+								"value": "Salads"
+							}
+						},
+						{
+							"name": {
+								"value": "Street Tacos"
+							}
+						}
+					]
+				},
+				{
+					"name": "item",
+					"values": [
+						{
+							"name": {
+								"value": "Cheese Curds"
+							}
+						},
+						{
+							"name": {
+								"value": "Mini Tacos"
+							}
+						},
+						{
+							"name": {
+								"value": "Black Bean Burger"
+							}
+						},
+						{
+							"name": {
+								"value": "Cowboy"
+							}
+						},
+						{
+							"name": {
+								"value": "California"
+							}
+						},
+						{
+							"name": {
+								"value": "Classic Hamburger"
+							}
+						},
+						{
+							"name": {
+								"value": "Double"
+							}
+						},
+						{
+							"name": {
+								"value": "Turkey"
+							}
+						},
+						{
+							"name": {
+								"value": "Tex-Mex"
+							}
+						},
+						{
+							"name": {
+								"value": "Peanut Butter Bacon"
+							}
+						},
+						{
+							"name": {
+								"value": "Gouda Bacon"
+							}
+						},
+						{
+							"name": {
+								"value": "Cesar Wrap"
+							}
+						},
+						{
+							"name": {
+								"value": "Zesty Melt"
+							}
+						},
+						{
+							"name": {
+								"value": "Quesadilla"
+							}
+						},
+						{
+							"name": {
+								"value": "Blooming Onion"
+							}
+						},
+						{
+							"name": {
+								"value": "Onion Rings"
+							}
+						},
+						{
+							"name": {
+								"value": "French Fries"
+							}
+						},
+						{
+							"name": {
+								"value": "Nachos"
+							}
+						},
+						{
+							"name": {
+								"value": "Chicken Strips"
+							}
+						},
+						{
+							"name": {
+								"value": "Teriaki Wings"
+							}
+						},
+						{
+							"name": {
+								"value": "Samurai Wings"
+							}
+						},
+						{
+							"name": {
+								"value": "Traditional Tots"
+							}
+						},
+						{
+							"name": {
+								"value": "Ranch Tots"
+							}
+						},
+						{
+							"name": {
+								"value": "Cajun Tots"
+							}
+						},
+						{
+							"name": {
+								"value": "Chicken Strips"
+							}
+						},
+						{
+							"name": {
+								"value": "Buffalo Strips"
+							}
+						},
+						{
+							"name": {
+								"value": "Mozzarella Sticks"
+							}
+						},
+						{
+							"name": {
+								"value": "Cheese Quesadilla"
+							}
+						},
+						{
+							"name": {
+								"value": "Chicken Quesadilla"
+							}
+						},
+						{
+							"name": {
+								"value": "Loaded Nachos"
+							}
+						},
+						{
+							"name": {
+								"value": "Grilled Cheese"
+							}
+						},
+						{
+							"name": {
+								"value": "Caprese Grilled Cheese"
+							}
+						},
+						{
+							"name": {
+								"value": "Chicken Avocado"
+							}
+						},
+						{
+							"name": {
+								"value": "Chicken Parmesan"
+							}
+						},
+						{
+							"name": {
+								"value": "Italian"
+							}
+						},
+						{
+							"name": {
+								"value": "Italian"
+							}
+						},
+						{
+							"name": {
+								"value": "Bacon Chicken Ranch"
+							}
+						},
+						{
+							"name": {
+								"value": "Bacon Chicken Chipotle"
+							}
+						},
+						{
+							"name": {
+								"value": "Chicken Caesar"
+							}
+						},
+						{
+							"name": {
+								"value": "Mandarin Chicken"
+							}
+						},
+						{
+							"name": {
+								"value": "Firecracker"
+							}
+						},
+						{
+							"name": {
+								"value": "Bacon Chicken Ranch"
+							}
+						},
+						{
+							"name": {
+								"value": "Bacon Chicken Chipotle"
+							}
+						},
+						{
+							"name": {
+								"value": "Chicken Caesar"
+							}
+						},
+						{
+							"name": {
+								"value": "Mandarin Chicken"
+							}
+						},
+						{
+							"name": {
+								"value": "Firecracker"
+							}
+						},
+						{
+							"name": {
+								"value": "House"
+							}
+						},
+						{
+							"name": {
+								"value": "Pork Carnitas"
+							}
+						},
+						{
+							"name": {
+								"value": "Beef Barbacoa"
+							}
+						}
+					]
+				}
+			]
+		}
+	}
 };
