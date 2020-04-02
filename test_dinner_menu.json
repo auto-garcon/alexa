@@ -37,7 +37,7 @@
             ]
         },
         {
-            "category": "Burger",
+            "category": "Burgers",
             "name": "California",
             "price": 6.25,
             "description": "Fresh Beef Patty, American Cheese, Cucumber, Avocado Mayo",
@@ -47,7 +47,7 @@
             ]
         },
         {
-            "category": "Burger",
+            "category": "Burgers",
             "name": "Classic Hamburger",
             "price": 5.50,
             "description": "Fresh Beef Patty, choice of Cheese for +50 cents",
@@ -56,7 +56,7 @@
             ]
         },
         {
-            "category": "Burger",
+            "category": "Burgers",
             "name": "Double",
             "price": 8.50,
             "description": "Two Fresh Beef Patty, choice of Cheese for +50 cents",
@@ -65,7 +65,7 @@
             ]
         },
         {
-            "category": "Burger",
+            "category": "Burgers",
             "name": "Turkey",
             "price": 6.25,
             "description": "Turkey Burger, Fresh Herbs, Spices",
@@ -74,7 +74,7 @@
             ]
         },
         {
-            "category": "Burger",
+            "category": "Burgers",
             "name": "Tex-Mex",
             "price": 6.25,
             "description": "Fresh Beef Patty, Pepper Jack, Pico de Gallo, Chipotle Mayo",
@@ -83,7 +83,7 @@
             ]
         },
         {
-            "category": "Burger",
+            "category": "Burgers",
             "name": "Peanut Butter Bacon",
             "price": 6.50,
             "description": "Fresh Beef Patty, Peanut Butter, Bacon SLices, Sauteed Onions",
@@ -92,7 +92,7 @@
             ]
         },
         {
-            "category": "Burger",
+            "category": "Burgers",
             "name": "Gouda Bacon",
             "price": 6.50,
             "description": "Fresh Beef Patty, Smoky Aioli & Gouda, Sauteed Onions, Bacon",
@@ -112,7 +112,7 @@
             ]
         },
         {
-            "category": "Entree",
+            "category": "Entrees",
             "name": "Zesty Melt",
             "price": 12,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
@@ -287,6 +287,24 @@
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
             "allergens":[
                 "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Bacon",
+            "price": 4,
+            "description": "delicious, crisp bacon",
+            "allergens":[
+                "pork"
+            ]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Mini Corn Dogs",
+            "price": 5.5,
+            "description": "small breaded hotdogs",
+            "allergens":[
                 "pork"
             ]
         },
