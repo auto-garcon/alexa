@@ -12,6 +12,7 @@
     "ask-sdk-core": "^2.0.0",
     "ask-sdk-model": "^1.28.0",
     "i18next": "^15.0.5",
+    "node-fetch": "^2.6.0",
     "taxjar": "^3.2.0"
   }
 }
