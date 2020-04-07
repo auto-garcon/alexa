@@ -4,6 +4,9 @@
 
 const Alexa = require("ask-sdk-core");
 const https = require("https");
+//const fetch = require('node-fetch');
+
+
 
 
 const jsonDinnerMenu = require("./dinner_menu.json")
@@ -29,6 +32,7 @@ const drinkMenu = jsonParser(jsonDrinkMenu);
 
 //for our build order functionality
 var currentOrder = [];
+var currentItem;
 var categories = [];
 var catIndex = 0;
 //ListOfCategories:fills the categories array with the appropriate category 
@@ -90,14 +94,25 @@ function FindItem(itemName){
     }
 }
 
+//FindItemInOrder:this will return the index of the itemObject in the current order
+//Author:Max
+function FindItemInOrder(itemObject){
+    for (let i = 0; i < currentOrder.length; i++) {
+    if (currentOrder[i] === itemObject) {
+       return i;
+    }
+}
+}
+
 //GetPrice: returns the price of an item
 //Author: Max
 function GetPrice(itemObject){
     return itemObject.price;
+    
 }
 //GetPrice: returns the price of an item
 //Author: Ben
-function GetPrice(itemObject){
+function GetDescription(itemObject){
     return itemObject.description;
 }
 //AddToOrder: adds item to current order
@@ -127,7 +142,12 @@ function ReadCurrentOrder(){
     }
     else{
         for(var i =0; i < currentOrder.length; i++){
-            say += currentOrder[i].name + ", ";
+            if(currentOrder[i].mod !== undefined){
+                say += currentOrder[i].name + " with "+currentOrder[i].mod+", "
+            }
+            else{
+                say += currentOrder[i].name + ", ";
+            }
         }
     }
     return say;
@@ -183,11 +203,10 @@ const AllergenFilter_Handler = {
         }
         
         for(var i in dinnerMenu.items){
-            for(var j in dinnerMenu.items[i].allergens){
-                if(dinnerMenu.items[i].allergens[j] === allergen.toLowerCase()){
+                if(!dinnerMenu.items[i].allergens.includes(allergen.toLowerCase())){
                     say+=dinnerMenu.items[i].name + ", ";    
                 }
-            }
+            
         }
         
         return responseBuilder
@@ -196,6 +215,9 @@ const AllergenFilter_Handler = {
             .getResponse();
     },
 };
+
+//FilterByPrice_Handler: allows guest to filter items based on a price
+//Author: Zack.
 const FilterByPrice_Handler = {
    canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -486,6 +508,7 @@ const Pricing_Handler =  {
     },
 };
 
+
 //BuildOrder_Handler: builds up an order to send to the chef.
 //Author: Zack, Max.
 const BuildOrder_Handler =  {
@@ -507,18 +530,107 @@ const BuildOrder_Handler =  {
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
             AddToOrder(FindItem(slotValues.item.resolved));
-            say = "successfully added " +slotValues.item.heardAs +" to order";
+            say = "successfully added " +slotValues.item.heardAs +" to order.";
+            currentItem = FindItem(slotValues.item.resolved);
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             if(FindItem(slotValues.item.heardAs)!=undefined){
                 AddToOrder(FindItem(slotValues.item.heardAs));
-                say = "successfully added " +slotValues.item.heardAs +" to order";
+                say = "successfully added " +slotValues.item.heardAs +" to order.";
+                currentItem = FindItem(slotValues.item.heardAs);
             }
             else{
-                say = "I could not find "+slotValues.item.heardAs+ " on the menu"
+                say = "I could not find "+slotValues.item.heardAs+ " on the menu."
             }
             //slotStatus += 'which did not match any slot value. ';
             //console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
+        }
+
+        //still just for testing if unwanted scripts run
+        say += slotStatus;
+
+        return responseBuilder
+            .addElicitSlotDirective('mod', {
+                name: 'ModifyItem',
+                confirmationStatus: 'NONE',
+                slots: {}
+            })
+            .speak(say + " Would you like to add any modifications to this item?")
+            .reprompt("Would you like to add any modifications to this item?")
+            .getResponse();
+    },
+};
+
+//ModifyItem_Handler: Adds a modification to the items in an order.
+//Author: Max
+const ModifyItem_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'ModifyItem' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let slotValues = getSlotValues(request.intent.slots); 
+        let say = '';
+
+        let slotStatus = '';
+        let resolvedSlot;
+        
+
+        if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
+            //loop through the items in current order and see if the item exists
+            //currentItem = slotValues.item.resolved;
+            say = currentItem.name + " 1";
+        }
+        if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+          //just process the modification to the current item
+          say = currentItem.name + " 2";
+        }
+
+
+        if (slotValues.mod.ERstatus === 'ER_SUCCESS_MATCH') {
+            if(slotValues.mod.resolved == "yes"){
+                say = "Which modifications would you like to make?";//currentItem.name +" 3";
+                //this needs to chain to itself again
+                // return responseBuilder
+                //     // .addElicitSlotDirective('mod', {
+                //     //     name: 'ModifyItem',
+                //     //     confirmationStatus: 'NONE',
+                //     //     slots: {}
+                //     // })
+                //     .speak("Which modifications would you like to make?")
+                //     .reprompt("Which modifications would you like to make?")
+                //     .getResponse();
+                //return responseBuilder.reprompt("Which modifications would you like to make");
+            }
+            else if(slotValues.mod.resolved != "no" && slotValues.mod.resolved != "none"){
+                //var modification = slotValues.mod.heardAs;
+                if(FindItemInOrder(currentItem) != undefined){
+                    var index = FindItemInOrder(currentItem);
+                    var moddedItem = currentOrder[index];
+                    if (moddedItem.mod === undefined){
+                        moddedItem.mod = slotValues.mod.heardAs;
+                    }
+                    else{
+                        moddedItem.mod += slotValues.mod.heardAs;
+                    }
+                    currentOrder[index] = moddedItem;
+                    say = "you added "+slotValues.mod.heardAs+ " to "+currentItem.name + ". ";
+                }else{
+                    say = currentItem.name+ " 4";           
+                }
+
+                //add modification to item in order
+            }
+            else{
+                say = "Okay"
+            }
+        }
+        if (slotValues.mod.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+          say = currentItem.name+" 5";
         }
 
         //still just for testing if unwanted scripts run
@@ -530,6 +642,7 @@ const BuildOrder_Handler =  {
             .getResponse();
     },
 };
+
 
 //PlaceOrder_Handler:Places an order to the chef.
 //Author:Alexa Development team.
@@ -581,18 +694,19 @@ const PriceOfOrder_Handler =  {
 
 //ReadCurrentOrder_Handler:Reads back the number of items in the current order.
 //Author:Jack, Max.
-const ReadCurrentOrder_Handler =  {
+const ReadCurrentOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'ReadCurrentOrder' ;
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
         let say = ReadCurrentOrder();
-
+        //say = await fetch("https://showcase.linx.twenty57.net:8081/UnixTime/tounixtimestamp?datetime=now");
+        //say = await say.json();
 
         return responseBuilder
             .speak(say)
@@ -992,6 +1106,7 @@ exports.handler = skillBuilder
         RemoveItem_Handler,
         FilterByPrice_Handler,
         AllergenFilter_Handler,
+        ModifyItem_Handler,
         LaunchRequest_Handler, 
         SessionEndedHandler
     )
@@ -1017,6 +1132,11 @@ const model = {
     "interactionModel": {
         "languageModel": {
             "invocationName": "auto garcon",
+            "modelConfiguration": {
+                "fallbackIntentSensitivity": {
+                    "level": "LOW"
+                }
+            },
             "intents": [
                 {
                     "name": "AMAZON.FallbackIntent",
@@ -1047,9 +1167,6 @@ const model = {
                         }
                     ],
                     "samples": [
-                        "what {category} are on the menu",
-                        "what {category} is on the menu",
-                        "what {category} do you have",
                         "what do you have for {category}",
                         "what are your {category}",
                         "read me the {category} options",
@@ -1073,7 +1190,6 @@ const model = {
                         }
                     ],
                     "samples": [
-                        "how much are {item}",
                         "how much are your {category}",
                         "how much is {item}",
                         "how much does {item} cost",
@@ -1089,10 +1205,6 @@ const model = {
                         }
                     ],
                     "samples": [
-                        "I'll have a {item}",
-                        "order me a {item}",
-                        "order me the {item}",
-                        "i'd like a {item}",
                         "add {item} to order",
                         "order {item}"
                     ]
@@ -1101,9 +1213,9 @@ const model = {
                     "name": "PlaceOrder",
                     "slots": [],
                     "samples": [
-                        "send the order",
-                        "confirm the order",
-                        "place the order",
+                        "confirm order",
+                        "place my order",
+                        "send my order",
                         "send order to kitchen",
                         "place order"
                     ]
@@ -1112,6 +1224,9 @@ const model = {
                     "name": "PriceOfOrder",
                     "slots": [],
                     "samples": [
+                        "what's the total",
+                        "how much does this cost",
+                        "what's the cost",
                         "how much is all this",
                         "how much is everything",
                         "what is my total at",
@@ -1130,6 +1245,8 @@ const model = {
                     "name": "ReadCurrentOrder",
                     "slots": [],
                     "samples": [
+                        "what am I ordering",
+                        "what's my order",
                         "read the order",
                         "read me my order",
                         "read me back my order",
@@ -1149,6 +1266,8 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "I don't want {item}",
+                        "get rid of {item}",
                         "delete {item}",
                         "remove {item}",
                         "remove {item} from order"
@@ -1167,8 +1286,9 @@ const model = {
                         }
                     ],
                     "samples": [
-                        "what are the items {overUnder} {price}",
-                        "test FilterByPrice {price}"
+                        "get me the items {overUnder} {price}",
+                        "test FilterByPrice {price}",
+                        "what are the items {overUnder} {price}"
                     ]
                 },
                 {
@@ -1176,17 +1296,57 @@ const model = {
                     "slots": [
                         {
                             "name": "allergen",
-                            "type": "allergen"
+                            "type": "allergen",
+                            "samples": [
+                                "vegan"
+                            ]
                         }
                     ],
                     "samples": [
+                        "what doesn't contain {allergen}",
+                        "what isn't {allergen}",
+                        "get me everything that is not {allergen}",
                         "filter based on {allergen}"
                     ]
                 },
                 {
-                    "name": "LaunchRequest",
-                    "slots": [],
-                    "samples": []
+                    "name": "GetDescription",
+                    "slots": [
+                        {
+                            "name": "item",
+                            "type": "item"
+                        }
+                    ],
+                    "samples": [
+                        "what is in {item}",
+                        "what is on {item}",
+                        "describe {item}",
+                        "tell me about {item}"
+                    ]
+                },
+                {
+                    "name": "ModifyItem",
+                    "slots": [
+                        {
+                            "name": "mod",
+                            "type": "AMAZON.Food"
+                        },
+                        {
+                            "name": "item",
+                            "type": "item"
+                        }
+                    ],
+                    "samples": [
+                        "can I add {mod} to {item}",
+                        "I want {mod} on {item}",
+                        "can I get {mod} on {item}",
+                        "can I get {mod} on the {item}",
+                        "I want to add {mod} to {item}",
+                        "I want to add {mod}",
+                        "{mod}",
+                        "add {mod}",
+                        "add {mod} to {item}"
+                    ]
                 }
             ],
             "types": [
@@ -1195,32 +1355,42 @@ const model = {
                     "values": [
                         {
                             "name": {
-                                "value": "Appetizers"
+                                "value": "Drinks",
+                                "synonyms": [
+                                    "beverages"
+                                ]
                             }
                         },
                         {
                             "name": {
-                                "value": "Burgers"
+                                "value": "Appetizers",
+                                "synonyms": [
+                                    "apps"
+                                ]
                             }
                         },
                         {
                             "name": {
-                                "value": "Burger"
+                                "value": "Burgers",
+                                "synonyms": [
+                                    "burger"
+                                ]
                             }
                         },
                         {
                             "name": {
-                                "value": "Wraps"
+                                "value": "Wraps",
+                                "synonyms": [
+                                    "raps"
+                                ]
                             }
                         },
                         {
                             "name": {
-                                "value": "Entree"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Appetizer"
+                                "value": "Entrees",
+                                "synonyms": [
+                                    "Entree"
+                                ]
                             }
                         },
                         {
@@ -1507,6 +1677,8 @@ const model = {
                             "name": {
                                 "value": "under",
                                 "synonyms": [
+                                    "up to",
+                                    "below",
                                     "less than"
                                 ]
                             }
@@ -1515,6 +1687,8 @@ const model = {
                             "name": {
                                 "value": "over",
                                 "synonyms": [
+                                    "just over",
+                                    "above",
                                     "more than"
                                 ]
                             }
@@ -1524,6 +1698,30 @@ const model = {
                 {
                     "name": "price",
                     "values": [
+                        {
+                            "name": {
+                                "value": "fifteen dollars"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "one dollar"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "5 dollars"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "nine and a half dollars",
+                                "synonyms": [
+                                    "9.50",
+                                    "$9.50"
+                                ]
+                            }
+                        },
                         {
                             "name": {
                                 "value": "one hundred dollars"
@@ -1555,8 +1753,96 @@ const model = {
                             }
                         }
                     ]
+                },
+                {
+                    "name": "AMAZON.Food",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "extra mushrooms"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra pickles"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "double meat"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra bacon"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra onions"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra cheese"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "raw"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "well done"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "medium rare"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "rare"
+                            }
+                        }
+                    ]
                 }
             ]
-        }
+        },
+        "dialog": {
+            "intents": [
+                {
+                    "name": "AllergenFilter",
+                    "delegationStrategy": "SKILL_RESPONSE",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "allergen",
+                            "type": "allergen",
+                            "confirmationRequired": false,
+                            "elicitationRequired": true,
+                            "prompts": {
+                                "elicitation": "Elicit.Slot.458766584741.717883134057"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "delegationStrategy": "ALWAYS"
+        },
+        "prompts": [
+            {
+                "id": "Elicit.Slot.458766584741.717883134057",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "please give an allergen to filter by"
+                    }
+                ]
+            }
+        ]
     }
 };
