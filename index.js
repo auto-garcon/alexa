@@ -756,6 +756,28 @@ const ReadCurrentOrder_Handler = {
     },
 };
 
+//ClearOrder_Handler: Deletes all items in the current order.
+//Author:Jack, Max.
+const ClearOrder_Handler = {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'ClearOrder' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+        currentOrder = [];
+        let say = "Successfully cleared your order";
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
 //RemoveItem_Handler:Removes an item from the current order.
 //Author:Jack, Max.
 const RemoveItem_Handler =  {
@@ -1148,6 +1170,7 @@ exports.handler = skillBuilder
         FilterByPrice_Handler,
         AllergenFilter_Handler,
         ModifyItem_Handler,
+        ClearOrder_Handler,
         LaunchRequest_Handler, 
         SessionEndedHandler
     )
@@ -1208,6 +1231,8 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "read the {category} menu",
+                        "read the {category}",
                         "what do you have for {category}",
                         "what are your {category}",
                         "read me the {category} options",
@@ -1324,9 +1349,15 @@ const model = {
                         {
                             "name": "price",
                             "type": "price"
+                        },
+                        {
+                            "name": "category",
+                            "type": "category"
                         }
                     ],
                     "samples": [
+                        "what {category} are {overUnder} {price}",
+                        "what items are {overUnder} {price}",
                         "get me the items {overUnder} {price}",
                         "test FilterByPrice {price}",
                         "what are the items {overUnder} {price}"
@@ -1387,6 +1418,18 @@ const model = {
                         "{mod}",
                         "add {mod}",
                         "add {mod} to {item}"
+                    ]
+                },
+                {
+                    "name": "ClearOrder",
+                    "slots": [],
+                    "samples": [
+                        "start my order over",
+                        "scratch everything",
+                        "clear everything",
+                        "delete order",
+                        "clear my current order",
+                        "clear order"
                     ]
                 }
             ],
@@ -1800,6 +1843,21 @@ const model = {
                     "values": [
                         {
                             "name": {
+                                "value": "none"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "no"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "yes"
+                            }
+                        },
+                        {
+                            "name": {
                                 "value": "extra mushrooms"
                             }
                         },
@@ -1870,6 +1928,20 @@ const model = {
                             }
                         }
                     ]
+                },
+                {
+                    "name": "ReadMenu",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "category",
+                            "type": "category",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        }
+                    ]
                 }
             ],
             "delegationStrategy": "ALWAYS"
@@ -1881,6 +1953,15 @@ const model = {
                     {
                         "type": "PlainText",
                         "value": "please give an allergen to filter by"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.918377438504.1303097264628",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Which category of the menu would you like me to read?"
                     }
                 ]
             }
