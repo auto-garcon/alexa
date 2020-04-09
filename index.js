@@ -57,25 +57,26 @@ function ListOfCategories() {
             }
         }
     }
-    for (var i = 0; i < drinkMenu.items.length; i++) {
-        if (categories.length == 0) {
-            categories[catIndex] = drinkMenu.items[i].category;
-            catIndex += 1;
-        }
-        else{
-            var alreadyIn = 0;
-            for (var j = 0; j < categories.length; j++) {
-                if(drinkMenu.items[i].category == categories[j]){
-                    alreadyIn=1;
-                }
-            }
-            if(alreadyIn!=1){
-                categories[catIndex] = drinkMenu.items[i].category;
-                catIndex += 1;
-                alreadyIn =0;
-            }
-        }
-    }
+    categories[catIndex] = "Drinks";
+    // for (var i = 0; i < drinkMenu.items.length; i++) {
+    //     if (categories.length == 0) {
+    //         categories[catIndex] = drinkMenu.items[i].category;
+    //         catIndex += 1;
+    //     }
+    //     else{
+    //         var alreadyIn = 0;
+    //         for (var j = 0; j < categories.length; j++) {
+    //             if(drinkMenu.items[i].category == categories[j]){
+    //                 alreadyIn=1;
+    //             }
+    //         }
+    //         if(alreadyIn!=1){
+    //             categories[catIndex] = drinkMenu.items[i].category;
+    //             catIndex += 1;
+    //             alreadyIn =0;
+    //         }
+    //     }
+    // }
     
 }
 
@@ -230,6 +231,8 @@ const FilterByPrice_Handler = {
         let say = "";
         let overUnder = "";
         let price = '';
+        let category = '';
+        let itemsInCategory = [];
         if (handlerInput.requestEnvelope.request.intent.slots.overUnder === undefined) {
             say = 'overUnder not identified';
         } else {
@@ -242,33 +245,72 @@ const FilterByPrice_Handler = {
             price = handlerInput.requestEnvelope.request.intent.slots.price.value.substring(1);
         }
         price = parseFloat(price);
-        if(overUnder.toLowerCase() === "under"){
-            for(var i in dinnerMenu.items){
-                    if(dinnerMenu.items[i].price <= price){
-                        say+=dinnerMenu.items[i].name + ", ";    
-                    }
-            }
-            for(var i in drinkMenu.items){
-                    if(drinkMenu.items[i].price <= price){
-                        say+=drinkMenu.items[i].name + ", ";    
-                    }
-            }
-        }
-        
-        
-        if(overUnder.toLowerCase() === "over"){
-            for(var i in dinnerMenu.items){
-                    if(dinnerMenu.items[i].price >= price){
-                        say+=dinnerMenu.items[i].name + ", ";    
-                    }
-            }
-            for(var i in drinkMenu.items){
-                    if(drinkMenu.items[i].price >= price){
-                        say+=drinkMenu.items[i].name + ", ";    
-                    }
-            }
+        //if the user specified a category
+        if(handlerInput.requestEnvelope.request.intent.slots.category !== undefined){
             
+            if(handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase() == "drinks")
+            {
+                for(var i in drinkMenu.items)
+                {
+                    itemsInCategory.push(drinkMenu.items[i]);
+                }
+            }
+            else{
+             for(var i in dinnerMenu.items)
+                {
+                    if(dinnerMenu.items[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
+                        itemsInCategory.push(dinnerMenu.items[i]);
+                    }
+                }   
+            }
+            if(overUnder.toLowerCase() === "under"){
+                for(var i in itemsInCategory){
+                        if(itemsInCategory[i].price <= price){
+                            say+=itemsInCategory[i].name + ", ";    
+                        }
+                }
+            }
+        
+        
+            if(overUnder.toLowerCase() === "over"){
+                for(var i in itemsInCategory){
+                        if(itemsInCategory[i].price >= price){
+                            say+=itemsInCategory[i].name + ", ";    
+                        }
+                }
+            }
         }
+        //otherwise the user didn't specify a category
+        else{
+            if(overUnder.toLowerCase() === "under"){
+                for(var i in dinnerMenu.items){
+                        if(dinnerMenu.items[i].price <= price){
+                            say+=dinnerMenu.items[i].name + ", ";    
+                        }
+                }
+                for(var i in drinkMenu.items){
+                        if(drinkMenu.items[i].price <= price){
+                            say+=drinkMenu.items[i].name + ", ";    
+                        }
+                }
+            }
+        
+        
+            if(overUnder.toLowerCase() === "over"){
+                for(var i in dinnerMenu.items){
+                        if(dinnerMenu.items[i].price >= price){
+                            say+=dinnerMenu.items[i].name + ", ";    
+                        }
+                }
+                for(var i in drinkMenu.items){
+                        if(drinkMenu.items[i].price >= price){
+                            say+=drinkMenu.items[i].name + ", ";    
+                        }
+                }
+            
+            }
+        }
+        
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
@@ -409,7 +451,7 @@ const ReadMenu_Handler = {
       catString += categories[j] + ", ";
     }
     
-    let say = "Here are the categories on the menu: "+ catString + ". Try requesting a certain category to be read";
+    let say = "Here are the categories on the menu: "+ catString + ". Try requesting a certain category to be read.";
 
 
     // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
@@ -433,7 +475,6 @@ const ReadMenu_Handler = {
     if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
       //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
       var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs.toLowerCase()).map(item => item.name).join(", ");
-
       if (elseMenu.length > 0) {
         say = "Here are the " + slotValues.category.heardAs + " I found: " + elseMenu
       } else {
