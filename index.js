@@ -4,7 +4,7 @@
 
 const Alexa = require("ask-sdk-core");
 const https = require("https");
-//const fetch = require('node-fetch');
+const fetch = require('node-fetch');
 
 
 
@@ -12,6 +12,21 @@ const https = require("https");
 const jsonDinnerMenu = require("./dinner_menu.json")
 const jsonDrinkMenu = require("./drink_menu.json")
 const invocationName = "auto garcon";
+
+async function fetch_data()
+{
+    let res = fetch("http://worldclockapi.com/api/json/cst/now");
+    res = await res;
+    res = res.json();
+    res = await res;
+    return res;
+}
+
+let fetched_time = null;
+
+fetch_data().then(result => {
+    fetched_time = result.currentFileTime;
+});
 
 // Session Attributes 
 //   Alexa will track attributes for you, by default only during the lifespan of your session.
@@ -151,7 +166,7 @@ function ReadCurrentOrder(){
             }
         }
     }
-    return say;
+    return say; //+ fetched_time;
 }
 /////////////////////////////////////////////////////////////////////////////////
 //END GET LIST OF CATEGORIES
@@ -563,6 +578,7 @@ const BuildOrder_Handler =  {
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         
         let slotValues = getSlotValues(request.intent.slots); 
+        fromIntent = request.intent.name;
         let say = '';
 
         let slotStatus = '';
@@ -570,14 +586,14 @@ const BuildOrder_Handler =  {
 
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            AddToOrder(FindItem(slotValues.item.resolved));
-            say = "successfully added " +slotValues.item.heardAs +" to order.";
+            //AddToOrder(FindItem(slotValues.item.resolved));
+            //say = "successfully added " +slotValues.item.heardAs +" to order.";
             currentItem = FindItem(slotValues.item.resolved);
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             if(FindItem(slotValues.item.heardAs)!=undefined){
-                AddToOrder(FindItem(slotValues.item.heardAs));
-                say = "successfully added " +slotValues.item.heardAs +" to order.";
+                //AddToOrder(FindItem(slotValues.item.heardAs));
+                //say = "successfully added " +slotValues.item.heardAs +" to order.";
                 currentItem = FindItem(slotValues.item.heardAs);
             }
             else{
@@ -591,13 +607,8 @@ const BuildOrder_Handler =  {
         say += slotStatus;
 
         return responseBuilder
-            .addElicitSlotDirective('mod', {
-                name: 'ModifyItem',
-                confirmationStatus: 'NONE',
-                slots: {}
-            })
-            .speak(say + " Would you like to add any modifications to this item?")
-            .reprompt("Would you like to add any modifications to this item?")
+            .speak(say + " Would you like to add any modifications to " + currentItem.name + "?")
+            .reprompt("Would you like to add any modifications to " + currentItem.name + "?")
             .getResponse();
     },
 };
@@ -633,8 +644,8 @@ const ModifyItem_Handler =  {
 
 
         if (slotValues.mod.ERstatus === 'ER_SUCCESS_MATCH') {
-            if(slotValues.mod.resolved == "yes"){
-                say = "Which modifications would you like to make?";//currentItem.name +" 3";
+            // if(slotValues.mod.resolved == "yes"){
+            //     say = "Which modifications would you like to make?";//currentItem.name +" 3";
                 //this needs to chain to itself again
                 // return responseBuilder
                 //     // .addElicitSlotDirective('mod', {
@@ -646,29 +657,46 @@ const ModifyItem_Handler =  {
                 //     .reprompt("Which modifications would you like to make?")
                 //     .getResponse();
                 //return responseBuilder.reprompt("Which modifications would you like to make");
-            }
-            else if(slotValues.mod.resolved != "no" && slotValues.mod.resolved != "none"){
-                //var modification = slotValues.mod.heardAs;
-                if(FindItemInOrder(currentItem) != undefined){
-                    var index = FindItemInOrder(currentItem);
-                    var moddedItem = currentOrder[index];
-                    if (moddedItem.mod === undefined){
-                        moddedItem.mod = slotValues.mod.heardAs;
+            // }
+            // else if(slotValues.mod.resolved != "no" && slotValues.mod.resolved != "none"){
+                // var modification = slotValues.mod.heardAs;
+            
+            
+                // if(FindItemInOrder(currentItem) != undefined){
+                    if (currentItem.mod === undefined){
+                        currentItem.mod = slotValues.mod.heardAs;
                     }
                     else{
-                        moddedItem.mod += slotValues.mod.heardAs;
+                        currentItem.mod += " and "+slotValues.mod.heardAs;
                     }
-                    currentOrder[index] = moddedItem;
-                    say = "you added "+slotValues.mod.heardAs+ " to "+currentItem.name + ". ";
-                }else{
-                    say = currentItem.name+ " 4";           
-                }
+                    //AddToOrder(currentItem);
+                    say = "You added " +slotValues.mod.heardAs+ " to " + currentItem.name + ". Would you like to make any additional modifications?";
+                    
+                    //var index = FindItemInOrder(currentItem);
+                    //var moddedItem = currentOrder[index];
+                    //if (moddedItem.mod === undefined){
+                    //    moddedItem.mod = slotValues.mod.heardAs;
+                    //}
+                    //else{
+                    //    moddedItem.mod += slotValues.mod.heardAs;
+                    //}
+                    //currentOrder[index] = moddedItem;
+                    //say = "you added "+slotValues.mod.heardAs+ " to "+currentItem.name + ". ";
+                // }else{
+                //     say = currentItem.name + " 4";
+                // }
+                
+                
+            //     }else{
+                   // say = currentItem.name+ " 4";           
+                // }
 
                 //add modification to item in order
-            }
-            else{
-                say = "Okay"
-            }
+            // }
+            // else{
+                // say = "Okay"
+            // }
+            // say = " adding " + slotValues.mod.heardAs + " to " +currentItem.name;
         }
         if (slotValues.mod.ERstatus === 'ER_SUCCESS_NO_MATCH') {
           say = currentItem.name+" 5";
@@ -697,9 +725,12 @@ const PlaceOrder_Handler =  {
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
-        let say = 'Hello from PlaceOrder. ';
+        //build up the ticket object that would then be sent to the kitchen if the yes intent is invoked
+        //then send it to the kitchen under the yes intent
 
-
+        let say = "Your order consists of " + ReadCurrentOrder() + " . Are you ready to send your order to the kitchen?";
+        
+        
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
@@ -843,6 +874,7 @@ const LaunchRequest_Handler =  {
     },
 };
 
+//written by Amazon default
 const SessionEndedHandler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -872,6 +904,108 @@ const ErrorHandler =  {
     }
 };
 
+//written by Amazon code generator, edited by Max
+const AMAZON_YesIntent_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.YesIntent' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+        let say = 'You said Yes. ';
+        let previousIntent = getPreviousIntent(sessionAttributes);
+        say +=previousIntent
+        if (previousIntent=="BuildOrder" && !handlerInput.requestEnvelope.session.new) {
+            say = 'What modifications would you like to make? ';
+            return responseBuilder
+                .addElicitSlotDirective('mod', {
+                    name: 'ModifyItem',
+                    confirmationStatus: 'NONE'
+                })
+                .speak(say)
+                .reprompt('try again, ' + say)
+                .getResponse();
+        }
+        if (previousIntent=="ModifyItem" && !handlerInput.requestEnvelope.session.new) {
+            say = 'What other modifications would you like to make? ';
+            return responseBuilder
+                .addElicitSlotDirective('mod', {
+                    name: 'ModifyItem',
+                    confirmationStatus: 'NONE'
+                })
+                .speak(say)
+                .reprompt('try again, ' + say)
+                .getResponse();
+        }
+        if (previousIntent=="AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
+            say = ' ';
+            return responseBuilder
+                .addDelegateDirective({
+                    name: 'PlaceOrder',
+                    confirmationStatus: 'NONE'
+                })
+                .speak(say)
+                .reprompt('try again, ' + say)
+                .getResponse();
+        }
+        if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
+            //DO ALL THE CODE TO SEND THE ORDER RIGHT HERE, maybe build it up in place order, but send it after confirmation
+            
+            say = ' Order confirmed and sent to kitchen';
+            currentOrder=[];
+            return responseBuilder
+                .speak(say)
+                .reprompt('try again, ' + say)
+                .getResponse();
+        }
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
+//written by Amazon code generator, edited by Max
+const AMAZON_NoIntent_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NoIntent' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+        let say = 'You said No. ';
+        let previousIntent = getPreviousIntent(sessionAttributes);
+        
+        if (previousIntent=="BuildOrder" && !handlerInput.requestEnvelope.session.new) {
+            // say += 'Your last intent was ' + previousIntent + '. ';
+            AddToOrder(currentItem);
+            say = "Okay. Successfully added " +currentItem.name +" to order.";
+            say += " Are you ready to place your order?";
+
+        }
+        if (previousIntent=="ModifyItem" && !handlerInput.requestEnvelope.session.new) {
+            // say += 'Your last intent was ' + previousIntent + '. ';
+            AddToOrder(currentItem);
+            say = "Okay. Successfully added " +currentItem.name + " with " + currentItem.mod + " to order."
+            say += " Are you ready to place your order?";
+        }
+        if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
+            // say += 'Your last intent was ' + previousIntent + '. ';
+            say = "Okay. Feel free to continue modifying your order. Just say Place Order when you're ready to send it to the kitchen."
+        }
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
 
 // 2. Constants ===========================================================================
 
@@ -1160,6 +1294,8 @@ exports.handler = skillBuilder
         AMAZON_HelpIntent_Handler, 
         AMAZON_StopIntent_Handler, 
         AMAZON_NavigateHomeIntent_Handler, 
+        AMAZON_YesIntent_Handler,
+        AMAZON_NoIntent_Handler,
         ReadMenu_Handler, 
         Pricing_Handler, 
         BuildOrder_Handler, 
@@ -1431,6 +1567,14 @@ const model = {
                         "clear my current order",
                         "clear order"
                     ]
+                },
+                {
+                    "name": "AMAZON.YesIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NoIntent",
+                    "samples": []
                 }
             ],
             "types": [
@@ -1843,21 +1987,6 @@ const model = {
                     "values": [
                         {
                             "name": {
-                                "value": "none"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "no"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "yes"
-                            }
-                        },
-                        {
-                            "name": {
                                 "value": "extra mushrooms"
                             }
                         },
@@ -1942,6 +2071,14 @@ const model = {
                             "prompts": {}
                         }
                     ]
+                },
+                {
+                    "name": "ClearOrder",
+                    "confirmationRequired": true,
+                    "prompts": {
+                        "confirmation": "Confirm.Intent.1294309823697"
+                    },
+                    "slots": []
                 }
             ],
             "delegationStrategy": "ALWAYS"
@@ -1962,6 +2099,15 @@ const model = {
                     {
                         "type": "PlainText",
                         "value": "Which category of the menu would you like me to read?"
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Intent.1294309823697",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "Are you sure you would like to clear your current order?"
                     }
                 ]
             }
