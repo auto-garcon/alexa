@@ -2,7 +2,7 @@
     "items": [
         {
             "category": "Appetizers",
-            "name": "Cheesecurds",
+            "name": "Cheese Curds",
             "description": "yummy, gooey wisconson cheese deepfried in pig oil batter and served with a dollop of house sause",
             "price": 5.50,
             "allergens": [
@@ -15,7 +15,10 @@
             "category": "Appetizers",
             "name": "Mini Tacos",
             "price": 7.50,
-            "description": "bite-sized Mexico"
+            "description": "bite-sized Mexico",
+            "allergens": [
+                "meat"
+            ]
         },
         {
             "category": "Burgers",
@@ -29,11 +32,245 @@
         {
             "category": "Burgers",
             "name": "Cowboy Burger",
-            "price": 12,
+            "price": 6.50,
             "description": "take a bite of the wild west with this quarter pound BBQ burger topped with onion rings and bacon",
             "allergens":[
                 "lactose",
                 "pork"
+            ]
+        },
+        {
+            "category": "Burgers",
+            "name": "California Burger",
+            "price": 6.25,
+            "description": "Fresh Beef Patty, American Cheese, Cucumber, Avocado Mayo",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Burgers",
+            "name": "Classic Hamburger",
+            "price": 5.50,
+            "description": "Fresh Beef Patty, choice of Cheese for +50 cents",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Burgers",
+            "name": "Turkey Burger",
+            "price": 6.25,
+            "description": "Turkey Burger, Fresh Herbs, Spices",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Burgers",
+            "name": "Tex-Mex Burger",
+            "price": 6.25,
+            "description": "Fresh Beef Patty, Pepper Jack, Pico de Gallo, Chipotle Mayo",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Onion Rings",
+            "price": 5.5,
+            "description": "you know what onion rings are",
+            "allergens":[]
+        },
+        {
+            "category": "Appetizers",
+            "name": "French Fries",
+            "price": 5,
+            "description": "deep fried potato strips",
+            "allergens":[]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Traditional Tots",
+            "price": 3.95,
+            "description": "crispy potatos",
+            "allergens":[]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Ranch Tots",
+            "price": 3.95,
+            "description": "ranch flavored tots",
+            "allergens":[]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Cajun Tots",
+            "price": 2.95,
+            "description": "cajun seasoned tots",
+            "allergens":[]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Chicken Strips",
+            "price": 5.25,
+            "description": "deep fried chicken",
+            "allergens":[]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Buffalo Strips",
+            "price": 5.25,
+            "description": "spicy chicken strips",
+            "allergens":[]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Mozzarella Sticks",
+            "price": 5.35,
+            "description": "deep fried cheese sticks",
+            "allergens":[
+                "lactose"
+            ]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Loaded Nachos",
+            "price": 8.85,
+            "description": "tons of stuff on top of chips",
+            "allergens":[
+                "lactose",
+                "pork",
+                "beef"
+            ]
+        },
+        {
+            "category": "Appetizers",
+            "name": "Mini Corn Dogs",
+            "price": 5.5,
+            "description": "small breaded hotdogs",
+            "allergens":[
+                "pork"
+            ]
+        },
+        {
+            "category": "Paninis",
+            "name": "Grilled Cheese",
+            "price": 4.5,
+            "description": "Rosemary Bread with your choise of Cheese",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Paninis",
+            "name": "Chicken Avocado Panini",
+            "price": 6.25,
+            "description": "Rosemary Bread, Chicken, Gouda, Avocado Mayo, Spinach",
+            "allergens":[
+                "lactose",
+                "pork"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Bacon Chicken Ranch Wrap",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Bacon, Chicken, Grape Tomatoes, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Bacon Chicken Chipotle Wrap",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Bacon, Chicken, Pepper Jack, Grape Tomatoes, Chipotle Mayo",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Chicken Caesar Wrap",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Chicken, Croutons, Shaved Parmesan, Caesar Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Mandarin Chicken Wrap",
+            "price": 5.95,
+            "description": "Garlic Herb Wrap, Romaine, Chicken, Mandarin Oranges, Red Peppers & Onions, Wonton Strips, Sesame Seeds, Citrus Vinaigrette",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Wraps",
+            "name": "Firecracker Wrap",
+            "price": 5.95,
+            "description": "Jalapeno Wrap, Monterey Jack, Romaine, Chicken, Cucumber, Cherry Tomatoes, Buffalo Sause, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Bacon Chicken Ranch Salad",
+            "price": 7.50,
+            "description": "Romaine, Bacon, Chicken, Grape Tomatoes, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Bacon Chicken Chipotle Salad",
+            "price": 7.50,
+            "description": "Romaine, Bacon, Chicken, Grape Tomatoes, Chipotle Mayo Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Chicken Caesar Salad",
+            "price": 7.50,
+            "description": "Romaine, Chicken, Shaved Parmesan, Croutons",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Mandarin Chicken Salad",
+            "price": 7.50,
+            "description": "Romaine, Chicken, Mandarin Oranges, Red Onion & Pepper, Sesame Seeds, Wonton Strips, Citrus Vinaigrette Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "Firecracker Salad",
+            "price": 7.50,
+            "description": "Romaine, Monterey Jack, Chicken, Cucumbers, Grape Tomatoes, Buffalo Sause, Ranch Dressing",
+            "allergens":[
+                "meat"
+            ]
+        },
+        {
+            "category": "Salads",
+            "name": "House Salad",
+            "price": 7.50,
+            "description": "Romaine, Cucumbers, Chicken, Grape Tomatoes, Red Onions, Italian Vinaigrette",
+            "allergens":[
+                "meat"
             ]
         }
     ]
