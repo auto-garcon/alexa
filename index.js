@@ -259,9 +259,10 @@ const FilterByPrice_Handler = {
         } else {
             price = handlerInput.requestEnvelope.request.intent.slots.price.value.substring(1);
         }
+        
         price = parseFloat(price);
         //if the user specified a category
-        if(handlerInput.requestEnvelope.request.intent.slots.category !== undefined){
+        if(handlerInput.requestEnvelope.request.intent.slots.category.value !== undefined){
             
             if(handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase() == "drinks")
             {
@@ -304,9 +305,9 @@ const FilterByPrice_Handler = {
                         }
                 }
                 for(var i in drinkMenu.items){
-                        if(drinkMenu.items[i].price <= price){
-                            say+=drinkMenu.items[i].name + ", ";    
-                        }
+                         if(drinkMenu.items[i].price <= price){
+                             say+=drinkMenu.items[i].name + ", ";    
+                         }
                 }
             }
         
@@ -389,9 +390,9 @@ const AMAZON_HelpIntent_Handler =  {
         let intents = getCustomIntents();
         let sampleIntent = randomElement(intents);
 
-        let say = 'You asked for help. '; 
+        let say = ' '; 
 
-        say += ' Here something you can ask me, ' + getSampleUtterance(sampleIntent);
+        say += ' Here something you can ask me: read menu, get the price or description an item, add something to your order, get the price of your order, filter items by price or allergen, and clear or place your order ';
 
         return responseBuilder
             .speak(say)
@@ -526,13 +527,14 @@ const Pricing_Handler =  {
         let resolvedSlot;
 
 
-        if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
+        // if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
             say = "$"+GetPrice(FindItem(slotValues.item.heardAs));
-        }
-        if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            slotStatus += 'which did not match any slot value. ';
-            console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
-        }
+        // }
+        // if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+           // say = "$"+GetPrice(FindItem(slotValues.item.heardAs));           
+            //slotStatus += 'which did not match any slot value. ';
+        //     console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
+        // }
 
 
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
@@ -578,7 +580,7 @@ const BuildOrder_Handler =  {
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         
         let slotValues = getSlotValues(request.intent.slots); 
-        fromIntent = request.intent.name;
+        //fromIntent = request.intent.name;
         let say = '';
 
         let slotStatus = '';
@@ -632,18 +634,8 @@ const ModifyItem_Handler =  {
         let resolvedSlot;
         
 
-        if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            //loop through the items in current order and see if the item exists
-            //currentItem = slotValues.item.resolved;
-            say = currentItem.name + " 1";
-        }
-        if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-          //just process the modification to the current item
-          say = currentItem.name + " 2";
-        }
 
-
-        if (slotValues.mod.ERstatus === 'ER_SUCCESS_MATCH') {
+        // if (slotValues.mod.ERstatus === 'ER_SUCCESS_MATCH') {
             // if(slotValues.mod.resolved == "yes"){
             //     say = "Which modifications would you like to make?";//currentItem.name +" 3";
                 //this needs to chain to itself again
@@ -697,13 +689,13 @@ const ModifyItem_Handler =  {
                 // say = "Okay"
             // }
             // say = " adding " + slotValues.mod.heardAs + " to " +currentItem.name;
-        }
-        if (slotValues.mod.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-          say = currentItem.name+" 5";
-        }
+        // }
+        // if (slotValues.mod.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+        //   say = "I cannot add that type of modification to "+currentItem.name;
+        // }
 
-        //still just for testing if unwanted scripts run
-        say += slotStatus;
+        // //still just for testing if unwanted scripts run
+        // say += slotStatus;
 
         return responseBuilder
             .speak(say)
@@ -798,9 +790,14 @@ const ClearOrder_Handler = {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        let say='';
+        if (request.intent.confirmationStatus !== "DENIED") {
+            currentOrder = [];
+            say = "Successfully cleared your order";               
+        }else{
+            say = "Your order is still intact. What else can I do for you?"
+        }
 
-        currentOrder = [];
-        let say = "Successfully cleared your order";
 
         return responseBuilder
             .speak(say)
@@ -829,16 +826,21 @@ const RemoveItem_Handler =  {
 
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            RemoveFromOrder(FindItem(slotValues.item.heardAs));
-            
-            if (RemoveFromOrder(slotValues.item.resolved)) {
+
+            if (RemoveFromOrder(FindItem(slotValues.item.resolved))) {
                 say = "successfully removed " +slotValues.item.heardAs +" from order";
             } else {
                 say = "I could not find " + slotValues.item.heardAs +" in your order";
             }
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            slotStatus += 'which did not match any slot value. ';
+            //RemoveFromOrder(FindItem(slotValues.item.heardAs));
+            if (RemoveFromOrder(FindItem(slotValues.item.heardAs))) {
+                say = "successfully removed " +slotValues.item.heardAs +" from order";
+            } else {
+                say = "I could not find " + slotValues.item.heardAs +" in your order";
+            }
+            //slotStatus += 'which did not match any slot value. ';
             console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         }
         
@@ -995,6 +997,9 @@ const AMAZON_NoIntent_Handler =  {
             AddToOrder(currentItem);
             say = "Okay. Successfully added " +currentItem.name + " with " + currentItem.mod + " to order."
             say += " Are you ready to place your order?";
+        }
+        if (previousIntent=="AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
+            say = 'Okay. What else can I do for you?';
         }
         if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
             // say += 'Your last intent was ' + previousIntent + '. ';
