@@ -1,3 +1,66 @@
+const Taxjar = require('taxjar');
+const client = new Taxjar({
+    apiKey: "2837ad1585b8764c100a248d138eacfd"
+});
+
+//float
+var orderTotal;
+//zip needs to be a string
+var zip;
+//state needs to be a string of the state 2-letter abbreviation in caps
+var state;
+
+var tax;
+
+orderTotal = 100;
+zip = '55105';
+state = "MN";
+
+client.taxForOrder({
+    // from_country: 'US',
+    // from_zip: '92093',
+    // from_state: 'CA',
+    // from_city: 'La Jolla',
+    // from_street: '9500 Gilman Drive',
+    to_country: 'US',
+    to_zip: zip,
+    to_state: state,
+    //to_city: 'St. Paul',
+    //to_street: '2115 Summit Ave',
+    amount: 100.00,
+    shipping: 0,
+    nexus_addresses: [
+      {
+        id: 'Main Location',
+        country: 'US',
+        zip: zip,
+        state: state,
+        //city: 'St. Paul',
+        //street: '2215 Summit Ave'
+      }
+    ]
+    // line_items: [
+    //   {
+    //     id: '1',
+    //     quantity: 1,
+    //     product_tax_code: '20010',
+    //     unit_price: 15,
+    //     discount: 0
+    //   }
+    // ]
+  }).then(res => {
+    res.tax; // Tax object
+    res.tax.amount_to_collect; // Amount to collect
+    tax = res.tax.amount_to_collect
+    console.log(tax)
+    // console.log(res.tax)
+    // console.log(res.tax.amount_to_collect);
+  });
+
+//because of async, this gets evaluated before tax gets set to a value
+console.log(tax)
+/*
+
 jsonDinnerMenu = require("./dinner_menu.json")
 jsonDrinkMenu = require("./drink_menu.json")
 
@@ -116,9 +179,10 @@ function ReadCurrentOrder(){
 }
 
 
-AddToOrder(FindItem("Cheesecurds"));
-AddToOrder(FindItem("Mini Tacos"));
-ReadCurrentOrder();
-GetDescription(FindItem("Merlot"));
-//GetPrice(FindItem("Cheesecurds"));
-console.log(say);
+// AddToOrder(FindItem("Cheesecurds"));
+// AddToOrder(FindItem("Mini Tacos"));
+// ReadCurrentOrder();
+// GetDescription(FindItem("Merlot"));
+// //GetPrice(FindItem("Cheesecurds"));
+// console.log(say);
+*/
