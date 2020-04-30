@@ -9,22 +9,21 @@ const fetch = require('node-fetch');
 
 
 
-const jsonDinnerMenu = require("./dinner_menu.json")
-const jsonDrinkMenu = require("./drink_menu.json")
+let jsonDinnerMenu = require("./dinner_menu.json")
+let jsonDrinkMenu = require("./drink_menu.json")
 const invocationName = "auto garcon";
 
-async function fetch_data() {
-    let res = fetch("http://worldclockapi.com/api/json/cst/now");
+async function fetch_data()
+{
+    let res = fetch("https://autogarcon.live/api/restaurant/5/menu");
     res = await res;
     res = res.json();
     res = await res;
     return res;
 }
 
-let fetched_time = null;
-
 fetch_data().then(result => {
-    fetched_time = result.currentFileTime;
+    jsonDinnerMenu = result[2].menuItems;
 });
 
 // Session Attributes 
@@ -36,9 +35,9 @@ fetch_data().then(result => {
 //THIS IS GETTING A LIST OF CATEGORIES
 function jsonParser(stringValue) {
 
-    var string = JSON.stringify(stringValue);
-    var objectValue = JSON.parse(string);
-    return objectValue;
+   var string = JSON.stringify(stringValue);
+   var objectValue = JSON.parse(string);
+   return objectValue;
 }
 
 const dinnerMenu = jsonParser(jsonDinnerMenu);
@@ -57,17 +56,17 @@ function ListOfCategories() {
             categories[catIndex] = dinnerMenu.items[i].category;
             catIndex += 1;
         }
-        else {
+        else{
             var alreadyIn = 0;
             for (var j = 0; j < categories.length; j++) {
-                if (dinnerMenu.items[i].category == categories[j]) {
-                    alreadyIn = 1;
+                if(dinnerMenu.items[i].category == categories[j]){
+                    alreadyIn=1;
                 }
             }
-            if (alreadyIn != 1) {
+            if(alreadyIn!=1){
                 categories[catIndex] = dinnerMenu.items[i].category;
                 catIndex += 1;
-                alreadyIn = 0;
+                alreadyIn =0;
             }
         }
     }
@@ -91,19 +90,19 @@ function ListOfCategories() {
     //         }
     //     }
     // }
-
+    
 }
 
 //FindItem:this will return an object based on a text string match with the name of the item
 //Author:Max
-function FindItem(itemName) {
+function FindItem(itemName){
     for (var i = 0; i < dinnerMenu.items.length; i++) {
-        if (dinnerMenu.items[i].name.toLowerCase() == itemName.toLowerCase()) {
+        if(dinnerMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
             return dinnerMenu.items[i];
         }
     }
     for (var i = 0; i < drinkMenu.items.length; i++) {
-        if (drinkMenu.items[i].name.toLowerCase() == itemName.toLowerCase()) {
+        if(drinkMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
             return drinkMenu.items[i];
         }
     }
@@ -111,33 +110,33 @@ function FindItem(itemName) {
 
 //FindItemInOrder:this will return the index of the itemObject in the current order
 //Author:Max
-function FindItemInOrder(itemObject) {
+function FindItemInOrder(itemObject){
     for (let i = 0; i < currentOrder.length; i++) {
-        if (currentOrder[i] === itemObject) {
-            return i;
-        }
+    if (currentOrder[i] === itemObject) {
+       return i;
     }
+}
 }
 
 //GetPrice: returns the price of an item
 //Author: Max
-function GetPrice(itemObject) {
+function GetPrice(itemObject){
     return itemObject.price;
-
+    
 }
 //GetPrice: returns the price of an item
 //Author: Ben
-function GetDescription(itemObject) {
+function GetDescription(itemObject){
     return itemObject.description;
 }
 //AddToOrder: adds item to current order
 //Author:Max
-function AddToOrder(itemObject) {
+function AddToOrder(itemObject){
     currentOrder.push(itemObject);
 }
 //RemoveFromOrder: removes an item from the current order
 //Author: Jack,Max
-function RemoveFromOrder(itemObject) {
+function RemoveFromOrder(itemObject){
     let newOrder = []
     for (let i = 0; i < currentOrder.length; i++) {
         if (currentOrder[i] !== itemObject) {
@@ -150,17 +149,17 @@ function RemoveFromOrder(itemObject) {
 }
 //ReadCurrentOrder: reads back the current order
 //Author: Jack,Max
-function ReadCurrentOrder() {
+function ReadCurrentOrder(){
     let say = "";
-    if (currentOrder.length == 0) {
+    if(currentOrder.length == 0){
         say = "There are currently no items in your order";
     }
-    else {
-        for (var i = 0; i < currentOrder.length; i++) {
-            if (currentOrder[i].mod !== undefined) {
-                say += currentOrder[i].name + " with " + currentOrder[i].mod + ", "
+    else{
+        for(var i =0; i < currentOrder.length; i++){
+            if(currentOrder[i].mod !== undefined){
+                say += currentOrder[i].name + " with "+currentOrder[i].mod+", "
             }
-            else {
+            else{
                 say += currentOrder[i].name + ", ";
             }
         }
@@ -171,30 +170,29 @@ function ReadCurrentOrder() {
 //END GET LIST OF CATEGORIES
 
 //Amazon default function
-function getMemoryAttributes() {
-    const memoryAttributes = {
-        "history": [],
+function getMemoryAttributes() {   const memoryAttributes = {
+       "history":[],
 
         // The remaining attributes will be useful after DynamoDB persistence is configured
-        "launchCount": 0,
-        "lastUseTimestamp": 0,
+       "launchCount":0,
+       "lastUseTimestamp":0,
 
-        "lastSpeechOutput": {},
-        "nextIntent": []
+       "lastSpeechOutput":{},
+       "nextIntent":[]
 
-        // "favoriteColor":"",
-        // "name":"",
-        // "namePronounce":"",
-        // "email":"",
-        // "mobileNumber":"",
-        // "city":"",
-        // "state":"",
-        // "postcode":"",
-        // "birthday":"",
-        // "bookmark":0,
-        // "wishlist":[],
-    };
-    return memoryAttributes;
+       // "favoriteColor":"",
+       // "name":"",
+       // "namePronounce":"",
+       // "email":"",
+       // "mobileNumber":"",
+       // "city":"",
+       // "state":"",
+       // "postcode":"",
+       // "birthday":"",
+       // "bookmark":0,
+       // "wishlist":[],
+   };
+   return memoryAttributes;
 };
 
 const maxHistorySize = 30; // remember only latest 20 intents 
@@ -202,9 +200,9 @@ const maxHistorySize = 30; // remember only latest 20 intents
 
 // 1. Intent Handlers =============================================
 const AllergenFilter_Handler = {
-    canHandle(handlerInput) {
+  canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AllergenFilter';
+        return request.type === 'IntentRequest' && request.intent.name === 'AllergenFilter' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -217,14 +215,14 @@ const AllergenFilter_Handler = {
         } else {
             allergen = handlerInput.requestEnvelope.request.intent.slots.allergen.value;
         }
-
-        for (var i in dinnerMenu.items) {
-            if (!dinnerMenu.items[i].allergens.includes(allergen.toLowerCase())) {
-                say += dinnerMenu.items[i].name + ", ";
-            }
-
+        
+        for(var i in dinnerMenu.items){
+                if(!dinnerMenu.items[i].allergens.includes(allergen.toLowerCase())){
+                    say+=dinnerMenu.items[i].name + ", ";    
+                }
+            
         }
-
+        
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
@@ -235,9 +233,9 @@ const AllergenFilter_Handler = {
 //FilterByPrice_Handler: allows guest to filter items based on a price
 //Author: Zack.
 const FilterByPrice_Handler = {
-    canHandle(handlerInput) {
+   canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'FilterByPrice';
+        return request.type === 'IntentRequest' && request.intent.name === 'FilterByPrice' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -253,77 +251,80 @@ const FilterByPrice_Handler = {
         } else {
             overUnder = handlerInput.requestEnvelope.request.intent.slots.overUnder.value;
         }
-
+        
         if (handlerInput.requestEnvelope.request.intent.slots.price === undefined) {
             say = 'price not identified';
         } else {
             price = handlerInput.requestEnvelope.request.intent.slots.price.value.substring(1);
         }
-
+        
         price = parseFloat(price);
         //if the user specified a category
-        if (handlerInput.requestEnvelope.request.intent.slots.category.value !== undefined) {
-
-            if (handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase() == "drinks") {
-                for (var i in drinkMenu.items) {
+        if(handlerInput.requestEnvelope.request.intent.slots.category.value !== undefined){
+            
+            if(handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase() == "drinks")
+            {
+                for(var i in drinkMenu.items)
+                {
                     itemsInCategory.push(drinkMenu.items[i]);
                 }
             }
-            else {
-                for (var i in dinnerMenu.items) {
-                    if (dinnerMenu.items[i].category.toLowerCase() == handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()) {
+            else{
+             for(var i in dinnerMenu.items)
+                {
+                    if(dinnerMenu.items[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
                         itemsInCategory.push(dinnerMenu.items[i]);
                     }
+                }   
+            }
+            if(overUnder.toLowerCase() === "under"){
+                for(var i in itemsInCategory){
+                        if(itemsInCategory[i].price <= price){
+                            say+=itemsInCategory[i].name + ", ";    
+                        }
                 }
             }
-            if (overUnder.toLowerCase() === "under") {
-                for (var i in itemsInCategory) {
-                    if (itemsInCategory[i].price <= price) {
-                        say += itemsInCategory[i].name + ", ";
-                    }
-                }
-            }
-
-
-            if (overUnder.toLowerCase() === "over") {
-                for (var i in itemsInCategory) {
-                    if (itemsInCategory[i].price >= price) {
-                        say += itemsInCategory[i].name + ", ";
-                    }
+        
+        
+            if(overUnder.toLowerCase() === "over"){
+                for(var i in itemsInCategory){
+                        if(itemsInCategory[i].price >= price){
+                            say+=itemsInCategory[i].name + ", ";    
+                        }
                 }
             }
         }
         //otherwise the user didn't specify a category
-        else {
-            if (overUnder.toLowerCase() === "under") {
-                for (var i in dinnerMenu.items) {
-                    if (dinnerMenu.items[i].price <= price) {
-                        say += dinnerMenu.items[i].name + ", ";
-                    }
+        else{
+            if(overUnder.toLowerCase() === "under"){
+                for(var i in dinnerMenu.items){
+                        if(dinnerMenu.items[i].price <= price){
+                            say+=dinnerMenu.items[i].name + ", ";    
+                        }
                 }
-                for (var i in drinkMenu.items) {
-                    if (drinkMenu.items[i].price <= price) {
-                        say += drinkMenu.items[i].name + ", ";
-                    }
+                for(var i in drinkMenu.items){
+                         if(drinkMenu.items[i].price <= price){
+                             say+=drinkMenu.items[i].name + ", ";    
+                         }
                 }
             }
-
-
-            if (overUnder.toLowerCase() === "over") {
-                for (var i in dinnerMenu.items) {
-                    if (dinnerMenu.items[i].price >= price) {
-                        say += dinnerMenu.items[i].name + ", ";
-                    }
+        
+        
+            if(overUnder.toLowerCase() === "over"){
+                for(var i in dinnerMenu.items){
+                        if(dinnerMenu.items[i].price >= price){
+                            say+=dinnerMenu.items[i].name + ", ";    
+                        }
                 }
-                for (var i in drinkMenu.items) {
-                    if (drinkMenu.items[i].price >= price) {
-                        say += drinkMenu.items[i].name + ", ";
-                    }
+                for(var i in drinkMenu.items){
+                        if(drinkMenu.items[i].price >= price){
+                            say+=drinkMenu.items[i].name + ", ";    
+                        }
                 }
-
+            
             }
         }
-
+        
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
@@ -333,10 +334,10 @@ const FilterByPrice_Handler = {
 
 
 //written by Amazon default.
-const AMAZON_FallbackIntent_Handler = {
+const AMAZON_FallbackIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.FallbackIntent';
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.FallbackIntent' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -353,10 +354,10 @@ const AMAZON_FallbackIntent_Handler = {
 };
 
 //written by Amazon default.
-const AMAZON_CancelIntent_Handler = {
+const AMAZON_CancelIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.CancelIntent';
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.CancelIntent' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -374,10 +375,10 @@ const AMAZON_CancelIntent_Handler = {
 };
 
 //written by Amazon default.
-const AMAZON_HelpIntent_Handler = {
+const AMAZON_HelpIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.HelpIntent';
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.HelpIntent' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -387,7 +388,7 @@ const AMAZON_HelpIntent_Handler = {
         let intents = getCustomIntents();
         let sampleIntent = randomElement(intents);
 
-        let say = ' ';
+        let say = ' '; 
 
         say += ' Here something you can ask me: read menu, get the price or description an item, add something to your order, get the price of your order, filter items by price or allergen, and clear or place your order ';
 
@@ -399,10 +400,10 @@ const AMAZON_HelpIntent_Handler = {
 };
 
 //written by Amazon default.
-const AMAZON_StopIntent_Handler = {
+const AMAZON_StopIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.StopIntent';
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.StopIntent' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -420,10 +421,10 @@ const AMAZON_StopIntent_Handler = {
 };
 
 //written by Amazon default.
-const AMAZON_NavigateHomeIntent_Handler = {
+const AMAZON_NavigateHomeIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NavigateHomeIntent';
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NavigateHomeIntent' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -443,81 +444,81 @@ const AMAZON_NavigateHomeIntent_Handler = {
 //ReadMenu_Handler: will read back the items in a category or entire menu.
 //Author: Alexa Development team.
 const ReadMenu_Handler = {
-    canHandle(handlerInput) {
-        const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'ReadMenu';
-    },
-    handle(handlerInput) {
-        const request = handlerInput.requestEnvelope.request;
-        const responseBuilder = handlerInput.responseBuilder;
-        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+  canHandle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    return request.type === 'IntentRequest' && request.intent.name === 'ReadMenu';
+  },
+  handle(handlerInput) {
+    const request = handlerInput.requestEnvelope.request;
+    const responseBuilder = handlerInput.responseBuilder;
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
 
-        let slotStatus = '';
-        let resolvedSlot;
+    let slotStatus = '';
+    let resolvedSlot;
 
-        let slotValues = getSlotValues(request.intent.slots);
+    let slotValues = getSlotValues(request.intent.slots);
 
-        ListOfCategories();
-        var catString = ' ';
-        for (var j = 0; j < categories.length; j++) {
-            catString += categories[j] + ", ";
-        }
-
-        let say = "Here are the categories on the menu: " + catString + ". Try requesting a certain category to be read.";
-
-
-        // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
-
-        //   SLOT: category 
-
-        if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-            if (slotValues.category.resolved.toLowerCase() == "drinks") {
-                var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
-
-                say = "Here are the drinks I found: " + listOfDrinks;
-            }
-            else {
-                var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved.toLowerCase()).map(item => item.name).join(", ");
-                say = "Here are the " + slotValues.category.resolved + " I found: " + elseMenu;
-
-            }
-        }
-
-        //This never gets triggered because she just doesn't recognize a category
-        if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
-            var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs.toLowerCase()).map(item => item.name).join(", ");
-            if (elseMenu.length > 0) {
-                say = "Here are the " + slotValues.category.heardAs + " I found: " + elseMenu
-            } else {
-                say = "I found no " + slotValues.category.heardAs + " items";
-            }
-
-        }
-
-        say += slotStatus;
+    ListOfCategories();
+    var catString = ' ';
+    for (var j = 0; j < categories.length; j++) {
+      catString += categories[j] + ", ";
+    }
+    
+    let say = "Here are the categories on the menu: "+ catString + ". Try requesting a certain category to be read.";
 
 
-        return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
-            .getResponse();
-    },
+    // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
+
+    //   SLOT: category 
+
+    if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
+      if (slotValues.category.resolved.toLowerCase() == "drinks") {
+        var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
+
+        say = "Here are the drinks I found: " + listOfDrinks;
+      }
+      else {
+        var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved.toLowerCase()).map(item => item.name).join(", ");
+        say = "Here are the " + slotValues.category.resolved + " I found: " + elseMenu;
+
+      }
+    }
+    
+    //This never gets triggered because she just doesn't recognize a category
+    if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+      //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
+      var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs.toLowerCase()).map(item => item.name).join(", ");
+      if (elseMenu.length > 0) {
+        say = "Here are the " + slotValues.category.heardAs + " I found: " + elseMenu
+      } else {
+        say = "I found no " + slotValues.category.heardAs + " items";
+      }
+
+    }
+
+    say += slotStatus;
+
+
+    return responseBuilder
+      .speak(say)
+      .reprompt('try again, ' + say)
+      .getResponse();
+  },
 };
 //Pricing_Handler: Gets the price of a slotValue.
 //Author: Jack,Max.
-const Pricing_Handler = {
+const Pricing_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'Pricing';
+        return request.type === 'IntentRequest' && request.intent.name === 'Pricing' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-        let slotValues = getSlotValues(request.intent.slots);
+        
+        let slotValues = getSlotValues(request.intent.slots); 
         let say = '';
 
         let slotStatus = '';
@@ -525,22 +526,22 @@ const Pricing_Handler = {
 
 
         // if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-        say = "$" + GetPrice(FindItem(slotValues.item.heardAs));
+            say = "$"+GetPrice(FindItem(slotValues.item.heardAs));
         // }
         // if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-        // say = "$"+GetPrice(FindItem(slotValues.item.heardAs));           
-        //slotStatus += 'which did not match any slot value. ';
+           // say = "$"+GetPrice(FindItem(slotValues.item.heardAs));           
+            //slotStatus += 'which did not match any slot value. ';
         //     console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         // }
 
 
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-            if (slotValues.category.resolved == "drinks") {
+            if(slotValues.category.resolved=="drinks"){
                 say = drinkMenu.items.map(item => {
                     return item.name + " is $" + item.price;
                 }).join(", ");
             }
-            else {
+            else{
                 say = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
                     return item.name + " is $" + item.price;
                 }).join(", ");
@@ -548,8 +549,8 @@ const Pricing_Handler = {
         }
         if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
-                return item.name + " is $" + item.price;
-            }).join(", ");
+                    return item.name + " is $" + item.price;
+                }).join(", ");
             say = elseMenu.length > 0 ? elseMenu : "I found no " + slotValues.category.heardAs + " items";
         }
 
@@ -563,20 +564,78 @@ const Pricing_Handler = {
     },
 };
 
-
-//BuildOrder_Handler: builds up an order to send to the chef.
-//Author: Zack, Max.
-const BuildOrder_Handler = {
+//GetDescription_Handler: Gets the price of an item.
+//Author: Jack,Max.
+const GetDescription_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'BuildOrder';
+        return request.type === 'IntentRequest' && request.intent.name === 'GetDescription' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let slotValues = getSlotValues(request.intent.slots); 
+        let say = '';
 
-        let slotValues = getSlotValues(request.intent.slots);
+        let slotStatus = '';
+        let resolvedSlot;
+
+
+        // if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
+            say = GetDescription(FindItem(slotValues.item.heardAs));
+        // }
+        // if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+           // say = "$"+GetPrice(FindItem(slotValues.item.heardAs));           
+            //slotStatus += 'which did not match any slot value. ';
+        //     console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
+        // }
+
+
+        // if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
+        //     if(slotValues.category.resolved=="drinks"){
+        //         say = drinkMenu.items.map(item => {
+        //             return item.name + " is $" + item.price;
+        //         }).join(", ");
+        //     }
+        //     else{
+        //         say = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
+        //             return item.name + " is $" + item.price;
+        //         }).join(", ");
+        //     }
+        // }
+        // if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+        //     var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
+        //             return item.name + " is $" + item.price;
+        //         }).join(", ");
+        //     say = elseMenu.length > 0 ? elseMenu : "I found no " + slotValues.category.heardAs + " items";
+        // }
+
+        //still just for testing if unwanted scripts run
+        //say += slotStatus;
+
+        return responseBuilder
+            .speak(say)
+            .reprompt('try again, ' + say)
+            .getResponse();
+    },
+};
+
+
+//BuildOrder_Handler: builds up an order to send to the chef.
+//Author: Zack, Max.
+const BuildOrder_Handler =  {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'BuildOrder' ;
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let slotValues = getSlotValues(request.intent.slots); 
         //fromIntent = request.intent.name;
         let say = '';
 
@@ -590,13 +649,13 @@ const BuildOrder_Handler = {
             currentItem = FindItem(slotValues.item.resolved);
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            if (FindItem(slotValues.item.heardAs) != undefined) {
+            if(FindItem(slotValues.item.heardAs)!=undefined){
                 //AddToOrder(FindItem(slotValues.item.heardAs));
                 //say = "successfully added " +slotValues.item.heardAs +" to order.";
                 currentItem = FindItem(slotValues.item.heardAs);
             }
-            else {
-                say = "I could not find " + slotValues.item.heardAs + " on the menu."
+            else{
+                say = "I could not find "+slotValues.item.heardAs+ " on the menu."
             }
             //slotStatus += 'which did not match any slot value. ';
             //console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
@@ -614,78 +673,78 @@ const BuildOrder_Handler = {
 
 //ModifyItem_Handler: Adds a modification to the items in an order.
 //Author: Max
-const ModifyItem_Handler = {
+const ModifyItem_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'ModifyItem';
+        return request.type === 'IntentRequest' && request.intent.name === 'ModifyItem' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-        let slotValues = getSlotValues(request.intent.slots);
+        
+        let slotValues = getSlotValues(request.intent.slots); 
         let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
-
+        
 
 
         // if (slotValues.mod.ERstatus === 'ER_SUCCESS_MATCH') {
-        // if(slotValues.mod.resolved == "yes"){
-        //     say = "Which modifications would you like to make?";//currentItem.name +" 3";
-        //this needs to chain to itself again
-        // return responseBuilder
-        //     // .addElicitSlotDirective('mod', {
-        //     //     name: 'ModifyItem',
-        //     //     confirmationStatus: 'NONE',
-        //     //     slots: {}
-        //     // })
-        //     .speak("Which modifications would you like to make?")
-        //     .reprompt("Which modifications would you like to make?")
-        //     .getResponse();
-        //return responseBuilder.reprompt("Which modifications would you like to make");
-        // }
-        // else if(slotValues.mod.resolved != "no" && slotValues.mod.resolved != "none"){
-        // var modification = slotValues.mod.heardAs;
+            // if(slotValues.mod.resolved == "yes"){
+            //     say = "Which modifications would you like to make?";//currentItem.name +" 3";
+                //this needs to chain to itself again
+                // return responseBuilder
+                //     // .addElicitSlotDirective('mod', {
+                //     //     name: 'ModifyItem',
+                //     //     confirmationStatus: 'NONE',
+                //     //     slots: {}
+                //     // })
+                //     .speak("Which modifications would you like to make?")
+                //     .reprompt("Which modifications would you like to make?")
+                //     .getResponse();
+                //return responseBuilder.reprompt("Which modifications would you like to make");
+            // }
+            // else if(slotValues.mod.resolved != "no" && slotValues.mod.resolved != "none"){
+                // var modification = slotValues.mod.heardAs;
+            
+            
+                // if(FindItemInOrder(currentItem) != undefined){
+                    if (currentItem.mod === undefined){
+                        currentItem.mod = slotValues.mod.heardAs;
+                    }
+                    else{
+                        currentItem.mod += " and "+slotValues.mod.heardAs;
+                    }
+                    //AddToOrder(currentItem);
+                    say = "You added " +slotValues.mod.heardAs+ " to " + currentItem.name + ". Would you like to make any additional modifications?";
+                    
+                    //var index = FindItemInOrder(currentItem);
+                    //var moddedItem = currentOrder[index];
+                    //if (moddedItem.mod === undefined){
+                    //    moddedItem.mod = slotValues.mod.heardAs;
+                    //}
+                    //else{
+                    //    moddedItem.mod += slotValues.mod.heardAs;
+                    //}
+                    //currentOrder[index] = moddedItem;
+                    //say = "you added "+slotValues.mod.heardAs+ " to "+currentItem.name + ". ";
+                // }else{
+                //     say = currentItem.name + " 4";
+                // }
+                
+                
+            //     }else{
+                   // say = currentItem.name+ " 4";           
+                // }
 
-
-        // if(FindItemInOrder(currentItem) != undefined){
-        if (currentItem.mod === undefined) {
-            currentItem.mod = slotValues.mod.heardAs;
-        }
-        else {
-            currentItem.mod += " and " + slotValues.mod.heardAs;
-        }
-        //AddToOrder(currentItem);
-        say = "You added " + slotValues.mod.heardAs + " to " + currentItem.name + ". Would you like to make any additional modifications?";
-
-        //var index = FindItemInOrder(currentItem);
-        //var moddedItem = currentOrder[index];
-        //if (moddedItem.mod === undefined){
-        //    moddedItem.mod = slotValues.mod.heardAs;
-        //}
-        //else{
-        //    moddedItem.mod += slotValues.mod.heardAs;
-        //}
-        //currentOrder[index] = moddedItem;
-        //say = "you added "+slotValues.mod.heardAs+ " to "+currentItem.name + ". ";
-        // }else{
-        //     say = currentItem.name + " 4";
-        // }
-
-
-        //     }else{
-        // say = currentItem.name+ " 4";           
-        // }
-
-        //add modification to item in order
-        // }
-        // else{
-        // say = "Okay"
-        // }
-        // say = " adding " + slotValues.mod.heardAs + " to " +currentItem.name;
+                //add modification to item in order
+            // }
+            // else{
+                // say = "Okay"
+            // }
+            // say = " adding " + slotValues.mod.heardAs + " to " +currentItem.name;
         // }
         // if (slotValues.mod.ERstatus === 'ER_SUCCESS_NO_MATCH') {
         //   say = "I cannot add that type of modification to "+currentItem.name;
@@ -704,10 +763,10 @@ const ModifyItem_Handler = {
 
 //PlaceOrder_Handler:Places an order to the chef.
 //Author:Alexa Development team.
-const PlaceOrder_Handler = {
+const PlaceOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'PlaceOrder';
+        return request.type === 'IntentRequest' && request.intent.name === 'PlaceOrder' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -716,10 +775,26 @@ const PlaceOrder_Handler = {
 
         //build up the ticket object that would then be sent to the kitchen if the yes intent is invoked
         //then send it to the kitchen under the yes intent
+        
+        //let ids = "";
+        
+        //capitalized to 
+        let orderItems = [];
+        if(currentOrder.length !== 0){
+            for(var i =0; i < currentOrder.length; i++){
+                orderItems[i] = {
+                    "menuItemID": currentOrder[i].itemID,
+                    "notes": currentOrder[i].mod
+                }
+               // ids += currentOrder[i].itemID + ", ";
+            }            
+        }
+        //orderItems will then be added to the ticket that we send off with the table number, restaurant id ...
 
-        let say = "Your order consists of " + ReadCurrentOrder() + " . Are you ready to send your order to the kitchen?";
 
-
+        let say = "Your order consists of " + ReadCurrentOrder() + " . Are you ready to send your order to the kitchen?";// + " Item ids are: "+ids;
+        
+        
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
@@ -728,16 +803,16 @@ const PlaceOrder_Handler = {
 };
 //PriceOfOrder_Handler:iterates through the current order and gives the total price.
 //Author:Jack,Max.
-const PriceOfOrder_Handler = {
+const PriceOfOrder_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'PriceOfOrder';
+        return request.type === 'IntentRequest' && request.intent.name === 'PriceOfOrder' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
+        
         let currentPrice = 0;
         currentOrder.forEach(item => {
             currentPrice += item.price;
@@ -758,7 +833,7 @@ const PriceOfOrder_Handler = {
 const ReadCurrentOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'ReadCurrentOrder';
+        return request.type === 'IntentRequest' && request.intent.name === 'ReadCurrentOrder' ;
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -781,17 +856,17 @@ const ReadCurrentOrder_Handler = {
 const ClearOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'ClearOrder';
+        return request.type === 'IntentRequest' && request.intent.name === 'ClearOrder' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        let say = '';
+        let say='';
         if (request.intent.confirmationStatus !== "DENIED") {
             currentOrder = [];
-            say = "Successfully cleared your order";
-        } else {
+            say = "Successfully cleared your order";               
+        }else{
             say = "Your order is still intact. What else can I do for you?"
         }
 
@@ -805,17 +880,17 @@ const ClearOrder_Handler = {
 
 //RemoveItem_Handler:Removes an item from the current order.
 //Author:Jack, Max.
-const RemoveItem_Handler = {
+const RemoveItem_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'RemoveItem';
+        return request.type === 'IntentRequest' && request.intent.name === 'RemoveItem' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-        let slotValues = getSlotValues(request.intent.slots);
+        
+        let slotValues = getSlotValues(request.intent.slots); 
         let say = '';
 
         let slotStatus = '';
@@ -825,23 +900,23 @@ const RemoveItem_Handler = {
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
 
             if (RemoveFromOrder(FindItem(slotValues.item.resolved))) {
-                say = "successfully removed " + slotValues.item.heardAs + " from order";
+                say = "successfully removed " +slotValues.item.heardAs +" from order";
             } else {
-                say = "I could not find " + slotValues.item.heardAs + " in your order";
+                say = "I could not find " + slotValues.item.heardAs +" in your order";
             }
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             //RemoveFromOrder(FindItem(slotValues.item.heardAs));
             if (RemoveFromOrder(FindItem(slotValues.item.heardAs))) {
-                say = "successfully removed " + slotValues.item.heardAs + " from order";
+                say = "successfully removed " +slotValues.item.heardAs +" from order";
             } else {
-                say = "I could not find " + slotValues.item.heardAs + " in your order";
+                say = "I could not find " + slotValues.item.heardAs +" in your order";
             }
             //slotStatus += 'which did not match any slot value. ';
-            console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! ');
+            console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         }
-
-
+        
+        
 
         say += slotStatus;
 
@@ -854,7 +929,7 @@ const RemoveItem_Handler = {
 };
 
 //written by Amazon default.
-const LaunchRequest_Handler = {
+const LaunchRequest_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'LaunchRequest';
@@ -869,12 +944,12 @@ const LaunchRequest_Handler = {
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
-            .getResponse();
+              .getResponse();
     },
 };
 
 //written by Amazon default
-const SessionEndedHandler = {
+const SessionEndedHandler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'SessionEndedRequest';
@@ -886,7 +961,7 @@ const SessionEndedHandler = {
 };
 
 //written by Amazon default.
-const ErrorHandler = {
+const ErrorHandler =  {
     canHandle() {
         return true;
     },
@@ -905,10 +980,10 @@ const ErrorHandler = {
 
 //AMAZON_YesIntent_Handler:Gets "yes" responses and redirects from what was the previous intent
 //Author: Max
-const AMAZON_YesIntent_Handler = {
+const AMAZON_YesIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.YesIntent';
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.YesIntent' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -917,8 +992,8 @@ const AMAZON_YesIntent_Handler = {
 
         let say = 'You said Yes. ';
         let previousIntent = getPreviousIntent(sessionAttributes);
-        say += previousIntent
-        if (previousIntent == "BuildOrder" && !handlerInput.requestEnvelope.session.new) {
+        say +=previousIntent
+        if (previousIntent=="BuildOrder" && !handlerInput.requestEnvelope.session.new) {
             say = 'What modifications would you like to make? ';
             return responseBuilder
                 .addElicitSlotDirective('mod', {
@@ -929,7 +1004,7 @@ const AMAZON_YesIntent_Handler = {
                 .reprompt('try again, ' + say)
                 .getResponse();
         }
-        if (previousIntent == "ModifyItem" && !handlerInput.requestEnvelope.session.new) {
+        if (previousIntent=="ModifyItem" && !handlerInput.requestEnvelope.session.new) {
             say = 'What other modifications would you like to make? ';
             return responseBuilder
                 .addElicitSlotDirective('mod', {
@@ -940,7 +1015,7 @@ const AMAZON_YesIntent_Handler = {
                 .reprompt('try again, ' + say)
                 .getResponse();
         }
-        if (previousIntent == "AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
+        if (previousIntent=="AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
             say = ' ';
             return responseBuilder
                 .addDelegateDirective({
@@ -951,11 +1026,11 @@ const AMAZON_YesIntent_Handler = {
                 .reprompt('try again, ' + say)
                 .getResponse();
         }
-        if (previousIntent == "PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
+        if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
             //DO ALL THE CODE TO SEND THE ORDER RIGHT HERE, maybe build it up in place order, but send it after confirmation
-
+            
             say = ' Order confirmed and sent to kitchen';
-            currentOrder = [];
+            currentOrder=[];
             return responseBuilder
                 .speak(say)
                 .reprompt('try again, ' + say)
@@ -971,10 +1046,10 @@ const AMAZON_YesIntent_Handler = {
 
 //AMAZON_NoIntent_Handler:Gets "no" responses and redirects from what was the previous intent
 //Author: Max
-const AMAZON_NoIntent_Handler = {
+const AMAZON_NoIntent_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NoIntent';
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NoIntent' ;
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -983,24 +1058,24 @@ const AMAZON_NoIntent_Handler = {
 
         let say = 'You said No. ';
         let previousIntent = getPreviousIntent(sessionAttributes);
-
-        if (previousIntent == "BuildOrder" && !handlerInput.requestEnvelope.session.new) {
+        
+        if (previousIntent=="BuildOrder" && !handlerInput.requestEnvelope.session.new) {
             // say += 'Your last intent was ' + previousIntent + '. ';
             AddToOrder(currentItem);
-            say = "Okay. Successfully added " + currentItem.name + " to order.";
+            say = "Okay. Successfully added " +currentItem.name +" to order.";
             say += " Are you ready to place your order?";
 
         }
-        if (previousIntent == "ModifyItem" && !handlerInput.requestEnvelope.session.new) {
+        if (previousIntent=="ModifyItem" && !handlerInput.requestEnvelope.session.new) {
             // say += 'Your last intent was ' + previousIntent + '. ';
             AddToOrder(currentItem);
-            say = "Okay. Successfully added " + currentItem.name + " with " + currentItem.mod + " to order."
+            say = "Okay. Successfully added " +currentItem.name + " with " + currentItem.mod + " to order."
             say += " Are you ready to place your order?";
         }
-        if (previousIntent == "AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
+        if (previousIntent=="AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
             say = 'Okay. What else can I do for you?';
         }
-        if (previousIntent == "PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
+        if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
             // say += 'Your last intent was ' + previousIntent + '. ';
             say = "Okay. Feel free to continue modifying your order. Just say Place Order when you're ready to send it to the kitchen."
         }
@@ -1013,10 +1088,10 @@ const AMAZON_NoIntent_Handler = {
 
 // 2. Constants ===========================================================================
 
-// Here you can define static data, to be used elsewhere in your code.  For example: 
-//    const myString = "Hello World";
-//    const myArray  = [ "orange", "grape", "strawberry" ];
-//    const myObject = { "city": "Boston",  "state":"Massachusetts" };
+    // Here you can define static data, to be used elsewhere in your code.  For example: 
+    //    const myString = "Hello World";
+    //    const myArray  = [ "orange", "grape", "strawberry" ];
+    //    const myObject = { "city": "Boston",  "state":"Massachusetts" };
 
 const APP_ID = undefined;  // TODO replace with your Skill ID (OPTIONAL).
 
@@ -1024,307 +1099,308 @@ const APP_ID = undefined;  // TODO replace with your Skill ID (OPTIONAL).
 //written by Amazon default.
 function capitalize(myString) {
 
-    return myString.replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
+     return myString.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) ;
 }
 //written by Amazon default.
-function randomElement(myArray) {
-    return (myArray[Math.floor(Math.random() * myArray.length)]);
-}
-
-//written by Amazon default.
-function stripSpeak(str) {
-    return (str.replace('<speak>', '').replace('</speak>', ''));
-}
-
-
-
-//written by Amazon default.
-function getSlotValues(filledSlots) {
-    const slotValues = {};
-
-    Object.keys(filledSlots).forEach((item) => {
-        const name = filledSlots[item].name;
-
-        if (filledSlots[item] &&
-            filledSlots[item].resolutions &&
-            filledSlots[item].resolutions.resolutionsPerAuthority[0] &&
-            filledSlots[item].resolutions.resolutionsPerAuthority[0].status &&
-            filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) {
-            switch (filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) {
-                case 'ER_SUCCESS_MATCH':
-                    slotValues[name] = {
-                        heardAs: filledSlots[item].value,
-                        resolved: filledSlots[item].resolutions.resolutionsPerAuthority[0].values[0].value.name,
-                        ERstatus: 'ER_SUCCESS_MATCH'
-                    };
-                    break;
-                case 'ER_SUCCESS_NO_MATCH':
-                    slotValues[name] = {
-                        heardAs: filledSlots[item].value,
-                        resolved: '',
-                        ERstatus: 'ER_SUCCESS_NO_MATCH'
-                    };
-                    break;
-                default:
-                    break;
-            }
-        } else {
-            slotValues[name] = {
-                heardAs: filledSlots[item].value,
-                resolved: '',
-                ERstatus: ''
-            };
-        }
-    }, this);
-
-    return slotValues;
-}
-//written by Amazon default.
+function randomElement(myArray) { 
+    return(myArray[Math.floor(Math.random() * myArray.length)]); 
+} 
+ 
+ //written by Amazon default.
+function stripSpeak(str) { 
+    return(str.replace('<speak>', '').replace('</speak>', '')); 
+} 
+ 
+ 
+ 
+ //written by Amazon default.
+function getSlotValues(filledSlots) { 
+    const slotValues = {}; 
+ 
+    Object.keys(filledSlots).forEach((item) => { 
+        const name  = filledSlots[item].name; 
+ 
+        if (filledSlots[item] && 
+            filledSlots[item].resolutions && 
+            filledSlots[item].resolutions.resolutionsPerAuthority[0] && 
+            filledSlots[item].resolutions.resolutionsPerAuthority[0].status && 
+            filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) { 
+            switch (filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) { 
+                case 'ER_SUCCESS_MATCH': 
+                    slotValues[name] = { 
+                        heardAs: filledSlots[item].value, 
+                        resolved: filledSlots[item].resolutions.resolutionsPerAuthority[0].values[0].value.name, 
+                        ERstatus: 'ER_SUCCESS_MATCH' 
+                    }; 
+                    break; 
+                case 'ER_SUCCESS_NO_MATCH': 
+                    slotValues[name] = { 
+                        heardAs: filledSlots[item].value, 
+                        resolved: '', 
+                        ERstatus: 'ER_SUCCESS_NO_MATCH' 
+                    }; 
+                    break; 
+                default: 
+                    break; 
+            } 
+        } else { 
+            slotValues[name] = { 
+                heardAs: filledSlots[item].value, 
+                resolved: '', 
+                ERstatus: '' 
+            }; 
+        } 
+    }, this); 
+ 
+    return slotValues; 
+} 
+ //written by Amazon default.
 function supportsDisplay(handlerInput) // returns true if the skill is running on a device with a display (Echo Show, Echo Spot, etc.) 
 {                                      //  Enable your skill for display as shown here: https://alexa.design/enabledisplay 
-    const hasDisplay =
-        handlerInput.requestEnvelope.context &&
-        handlerInput.requestEnvelope.context.System &&
-        handlerInput.requestEnvelope.context.System.device &&
-        handlerInput.requestEnvelope.context.System.device.supportedInterfaces &&
-        handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display;
-
-    return hasDisplay;
+    const hasDisplay = 
+        handlerInput.requestEnvelope.context && 
+        handlerInput.requestEnvelope.context.System && 
+        handlerInput.requestEnvelope.context.System.device && 
+        handlerInput.requestEnvelope.context.System.device.supportedInterfaces && 
+        handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display; 
+ 
+    return hasDisplay; 
 }
-//written by Amazon default.
-function getCustomIntents() {
-    const modelIntents = model.interactionModel.languageModel.intents;
-
-    let customIntents = [];
-
-
-    for (let i = 0; i < modelIntents.length; i++) {
-
-        if (modelIntents[i].name.substring(0, 7) != "AMAZON." && modelIntents[i].name !== "LaunchRequest") {
-            customIntents.push(modelIntents[i]);
-        }
-    }
-    return customIntents;
-}
-//written by Amazon default.
-function getSampleUtterance(intent) {
-
-    return randomElement(intent.samples);
-
-}
-//written by Amazon default.
-function getPreviousIntent(attrs) {
-
-    if (attrs.history && attrs.history.length > 1) {
-        return attrs.history[attrs.history.length - 2].IntentRequest;
-
-    } else {
-        return false;
-    }
-
-}
-//written by Amazon default.
-function getPreviousSpeechOutput(attrs) {
-
-    if (attrs.lastSpeechOutput && attrs.history.length > 1) {
-        return attrs.lastSpeechOutput;
-
-    } else {
-        return false;
-    }
-
-}
-//written by Amazon default.
-const InitMemoryAttributesInterceptor = {
-    process(handlerInput) {
-        let sessionAttributes = {};
-        if (handlerInput.requestEnvelope.session['new']) {
-
-            sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-            let memoryAttributes = getMemoryAttributes();
-
-            if (Object.keys(sessionAttributes).length === 0) {
-
-                Object.keys(memoryAttributes).forEach(function (key) {  // initialize all attributes from global list 
-
-                    sessionAttributes[key] = memoryAttributes[key];
-
-                });
-
-            }
-            handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-
-
-        }
-    }
-};
-//written by Amazon default.
-const RequestHistoryInterceptor = {
-    process(handlerInput) {
-
-        const thisRequest = handlerInput.requestEnvelope.request;
-        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-        let history = sessionAttributes['history'] || [];
-
-        let IntentRequest = {};
-        if (thisRequest.type === 'IntentRequest') {
-
-            let slots = [];
-
-            IntentRequest = {
-                'IntentRequest': thisRequest.intent.name
-            };
-
-            if (thisRequest.intent.slots) {
-
-                for (let slot in thisRequest.intent.slots) {
-                    let slotObj = {};
-                    slotObj[slot] = thisRequest.intent.slots[slot].value;
-                    slots.push(slotObj);
-                }
-
-                IntentRequest = {
-                    'IntentRequest': thisRequest.intent.name,
-                    'slots': slots
-                };
-
-            }
-
-        } else {
-            IntentRequest = { 'IntentRequest': thisRequest.type };
-        }
-        if (history.length > maxHistorySize - 1) {
-            history.shift();
-        }
-        history.push(IntentRequest);
-
-        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-
-    }
-
-};
-
-
-
-//written by Amazon default.
-const RequestPersistenceInterceptor = {
-    process(handlerInput) {
-
-        if (handlerInput.requestEnvelope.session['new']) {
-
-            return new Promise((resolve, reject) => {
-
-                handlerInput.attributesManager.getPersistentAttributes()
-
-                    .then((sessionAttributes) => {
-                        sessionAttributes = sessionAttributes || {};
-
-
-                        sessionAttributes['launchCount'] += 1;
-
-                        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-
-                        handlerInput.attributesManager.savePersistentAttributes()
-                            .then(() => {
-                                resolve();
-                            })
-                            .catch((err) => {
-                                reject(err);
-                            });
-                    });
-
-            });
-
+ //written by Amazon default.
+function getCustomIntents() { 
+    const modelIntents = model.interactionModel.languageModel.intents; 
+ 
+    let customIntents = []; 
+ 
+ 
+    for (let i = 0; i < modelIntents.length; i++) { 
+ 
+        if(modelIntents[i].name.substring(0,7) != "AMAZON." && modelIntents[i].name !== "LaunchRequest" ) { 
+            customIntents.push(modelIntents[i]); 
+        } 
+    } 
+    return customIntents; 
+} 
+ //written by Amazon default.
+function getSampleUtterance(intent) { 
+ 
+    return randomElement(intent.samples); 
+ 
+} 
+ //written by Amazon default.
+function getPreviousIntent(attrs) { 
+ 
+    if (attrs.history && attrs.history.length > 1) { 
+        return attrs.history[attrs.history.length - 2].IntentRequest; 
+ 
+    } else { 
+        return false; 
+    } 
+ 
+} 
+ //written by Amazon default.
+function getPreviousSpeechOutput(attrs) { 
+ 
+    if (attrs.lastSpeechOutput && attrs.history.length > 1) { 
+        return attrs.lastSpeechOutput; 
+ 
+    } else { 
+        return false; 
+    } 
+ 
+} 
+ //written by Amazon default.
+const InitMemoryAttributesInterceptor = { 
+    process(handlerInput) { 
+        let sessionAttributes = {}; 
+        if(handlerInput.requestEnvelope.session['new']) { 
+ 
+            sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
+ 
+            let memoryAttributes = getMemoryAttributes(); 
+ 
+            if(Object.keys(sessionAttributes).length === 0) { 
+ 
+                Object.keys(memoryAttributes).forEach(function(key) {  // initialize all attributes from global list 
+ 
+                    sessionAttributes[key] = memoryAttributes[key]; 
+ 
+                }); 
+ 
+            } 
+            handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
+ 
+ 
+        } 
+    } 
+}; 
+ //written by Amazon default.
+const RequestHistoryInterceptor = { 
+    process(handlerInput) { 
+ 
+        const thisRequest = handlerInput.requestEnvelope.request; 
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
+ 
+        let history = sessionAttributes['history'] || []; 
+ 
+        let IntentRequest = {}; 
+        if (thisRequest.type === 'IntentRequest' ) { 
+ 
+            let slots = []; 
+ 
+            IntentRequest = { 
+                'IntentRequest' : thisRequest.intent.name 
+            }; 
+ 
+            if (thisRequest.intent.slots) { 
+ 
+                for (let slot in thisRequest.intent.slots) { 
+                    let slotObj = {}; 
+                    slotObj[slot] = thisRequest.intent.slots[slot].value; 
+                    slots.push(slotObj); 
+                } 
+ 
+                IntentRequest = { 
+                    'IntentRequest' : thisRequest.intent.name, 
+                    'slots' : slots 
+                }; 
+ 
+            } 
+ 
+        } else { 
+            IntentRequest = {'IntentRequest' : thisRequest.type}; 
+        } 
+        if(history.length > maxHistorySize - 1) { 
+            history.shift(); 
+        } 
+        history.push(IntentRequest); 
+ 
+        handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
+ 
+    } 
+ 
+}; 
+ 
+ 
+ 
+ //written by Amazon default.
+const RequestPersistenceInterceptor = { 
+    process(handlerInput) { 
+ 
+        if(handlerInput.requestEnvelope.session['new']) { 
+ 
+            return new Promise((resolve, reject) => { 
+ 
+                handlerInput.attributesManager.getPersistentAttributes() 
+ 
+                    .then((sessionAttributes) => { 
+                        sessionAttributes = sessionAttributes || {}; 
+ 
+ 
+                        sessionAttributes['launchCount'] += 1; 
+ 
+                        handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
+ 
+                        handlerInput.attributesManager.savePersistentAttributes() 
+                            .then(() => { 
+                                resolve(); 
+                            }) 
+                            .catch((err) => { 
+                                reject(err); 
+                            }); 
+                    }); 
+ 
+            }); 
+ 
         } // end session['new'] 
-    }
-};
-
-//written by Amazon default.
-const ResponseRecordSpeechOutputInterceptor = {
-    process(handlerInput, responseOutput) {
-
-        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        let lastSpeechOutput = {
-            "outputSpeech": responseOutput.outputSpeech.ssml,
-            "reprompt": responseOutput.reprompt.outputSpeech.ssml
-        };
-
-        sessionAttributes['lastSpeechOutput'] = lastSpeechOutput;
-
-        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-
-    }
-};
-//written by Amazon default.
-const ResponsePersistenceInterceptor = {
-    process(handlerInput, responseOutput) {
-
-        const ses = (typeof responseOutput.shouldEndSession == "undefined" ? true : responseOutput.shouldEndSession);
-
-        if (ses || handlerInput.requestEnvelope.request.type == 'SessionEndedRequest') { // skill was stopped or timed out 
-
-            let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-            sessionAttributes['lastUseTimestamp'] = new Date(handlerInput.requestEnvelope.request.timestamp).getTime();
-
-            handlerInput.attributesManager.setPersistentAttributes(sessionAttributes);
-
-            return new Promise((resolve, reject) => {
-                handlerInput.attributesManager.savePersistentAttributes()
-                    .then(() => {
-                        resolve();
-                    })
-                    .catch((err) => {
-                        reject(err);
-                    });
-
-            });
-
-        }
-
-    }
-};
-
-
-
+    } 
+}; 
+ 
+ //written by Amazon default.
+const ResponseRecordSpeechOutputInterceptor = { 
+    process(handlerInput, responseOutput) { 
+ 
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
+        let lastSpeechOutput = { 
+            "outputSpeech":responseOutput.outputSpeech.ssml, 
+            "reprompt":responseOutput.reprompt.outputSpeech.ssml 
+        }; 
+ 
+        sessionAttributes['lastSpeechOutput'] = lastSpeechOutput; 
+ 
+        handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
+ 
+    } 
+}; 
+ //written by Amazon default.
+const ResponsePersistenceInterceptor = { 
+    process(handlerInput, responseOutput) { 
+ 
+        const ses = (typeof responseOutput.shouldEndSession == "undefined" ? true : responseOutput.shouldEndSession); 
+ 
+        if(ses || handlerInput.requestEnvelope.request.type == 'SessionEndedRequest') { // skill was stopped or timed out 
+ 
+            let sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
+ 
+            sessionAttributes['lastUseTimestamp'] = new Date(handlerInput.requestEnvelope.request.timestamp).getTime(); 
+ 
+            handlerInput.attributesManager.setPersistentAttributes(sessionAttributes); 
+ 
+            return new Promise((resolve, reject) => { 
+                handlerInput.attributesManager.savePersistentAttributes() 
+                    .then(() => { 
+                        resolve(); 
+                    }) 
+                    .catch((err) => { 
+                        reject(err); 
+                    }); 
+ 
+            }); 
+ 
+        } 
+ 
+    } 
+}; 
+ 
+ 
+ 
 // 4. Exports handler function and setup ===================================================
 const skillBuilder = Alexa.SkillBuilders.custom();
 exports.handler = skillBuilder
     .addRequestHandlers(
-        AMAZON_FallbackIntent_Handler,
-        AMAZON_CancelIntent_Handler,
-        AMAZON_HelpIntent_Handler,
-        AMAZON_StopIntent_Handler,
-        AMAZON_NavigateHomeIntent_Handler,
+        AMAZON_FallbackIntent_Handler, 
+        AMAZON_CancelIntent_Handler, 
+        AMAZON_HelpIntent_Handler, 
+        AMAZON_StopIntent_Handler, 
+        AMAZON_NavigateHomeIntent_Handler, 
         AMAZON_YesIntent_Handler,
         AMAZON_NoIntent_Handler,
-        ReadMenu_Handler,
+        ReadMenu_Handler, 
         Pricing_Handler,
-        BuildOrder_Handler,
-        PlaceOrder_Handler,
-        PriceOfOrder_Handler,
-        ReadCurrentOrder_Handler,
+        GetDescription_Handler,
+        BuildOrder_Handler, 
+        PlaceOrder_Handler, 
+        PriceOfOrder_Handler, 
+        ReadCurrentOrder_Handler, 
         RemoveItem_Handler,
         FilterByPrice_Handler,
         AllergenFilter_Handler,
         ModifyItem_Handler,
         ClearOrder_Handler,
-        LaunchRequest_Handler,
+        LaunchRequest_Handler, 
         SessionEndedHandler
     )
     .addErrorHandlers(ErrorHandler)
     .addRequestInterceptors(InitMemoryAttributesInterceptor)
     .addRequestInterceptors(RequestHistoryInterceptor)
 
-    // .addResponseInterceptors(ResponseRecordSpeechOutputInterceptor)
+   // .addResponseInterceptors(ResponseRecordSpeechOutputInterceptor)
 
-    // .addRequestInterceptors(RequestPersistenceInterceptor)
-    // .addResponseInterceptors(ResponsePersistenceInterceptor)
+ // .addRequestInterceptors(RequestPersistenceInterceptor)
+ // .addResponseInterceptors(ResponsePersistenceInterceptor)
 
-    // .withTableName("askMemorySkillTable")
-    // .withAutoCreateTable(true)
+ // .withTableName("askMemorySkillTable")
+ // .withAutoCreateTable(true)
 
     .lambda();
 
