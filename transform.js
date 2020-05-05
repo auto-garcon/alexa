@@ -155,7 +155,9 @@ let result = {
             ]
         }
     }
-}
+};
+
+if (prevMenu.length > 0) prevMenu.items = prevMenu.map(menu => menu.menuItems).reduce((acc, val) => acc.concat(val), []);
 
 let categories = prevMenu.items.map(item => item.category);
 categories = categories.filter((item, index) => categories.indexOf(item) === index).map(category => {
