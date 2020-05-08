@@ -1,7 +1,11 @@
+let fetch = require("node-fetch");
 let fs = require('fs');
-let prevMenu = JSON.parse(fs.readFileSync(process.argv[2]).toString());
-
-let result = {
+async function getRemoteJson(link) {
+  let data = await fetch(link);
+  return await data.json();
+}
+getRemoteJson(process.argv[2]).then(async (prevMenu) => {
+  let result = {
     "interactionModel": {
         "languageModel": {
             "invocationName": "auto garcon",
@@ -155,30 +159,34 @@ let result = {
             ]
         }
     }
-};
+  };
 
-if (prevMenu.length > 0) prevMenu.items = prevMenu.map(menu => menu.menuItems).reduce((acc, val) => acc.concat(val), []);
+  console.log(prevMenu);
 
-let categories = prevMenu.items.map(item => item.category);
-categories = categories.filter((item, index) => categories.indexOf(item) === index).map(category => {
-    return {
-        "name": {
-            "value": category
-        }
-    }
+  if (prevMenu.length > 0) prevMenu.items = prevMenu.map(menu => menu.menuItems).reduce((acc, val) => acc.concat(val), []);
+
+  let categories = prevMenu.items.map(item => item.category);
+  categories = categories.filter((item, index) => categories.indexOf(item) === index).map(category => {
+      return {
+          "name": {
+              "value": category
+          }
+      }
+  });
+
+  result.interactionModel.languageModel.types[0].values = categories;
+
+  let item = prevMenu.items.map(item => {
+      return {
+          "name": {
+              "value": item.name,
+          }
+      }
+  });
+
+
+  result.interactionModel.languageModel.types[1].values = item;
+  console.log(result);
+  fs.writeFileSync("out_net.json", JSON.stringify(result, null, "\t"));
 });
 
-result.interactionModel.languageModel.types[0].values = categories;
-
-let item = prevMenu.items.map(item => {
-    return {
-        "name": {
-            "value": item.name,
-        }
-    }
-});
-
-
-
-result.interactionModel.languageModel.types[1].values = item;
-fs.writeFileSync("out.json", JSON.stringify(result, null, "\t"));

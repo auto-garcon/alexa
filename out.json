@@ -146,57 +146,32 @@
 					"values": [
 						{
 							"name": {
-								"value": "Appetizers"
-							}
-						},
-						{
-							"name": {
 								"value": "Burgers"
 							}
 						},
 						{
 							"name": {
-								"value": "Burger"
+								"value": "Appetizers"
 							}
 						},
 						{
 							"name": {
-								"value": "Wraps"
+								"value": "Fajitas"
 							}
 						},
 						{
 							"name": {
-								"value": "Entree"
+								"value": "Chicken & Seafood"
 							}
 						},
 						{
 							"name": {
-								"value": "Appetizer"
+								"value": "Chicken Crispers"
 							}
 						},
 						{
 							"name": {
-								"value": "Wings"
-							}
-						},
-						{
-							"name": {
-								"value": "Paninis"
-							}
-						},
-						{
-							"name": {
-								"value": "Hot Sandwhiches"
-							}
-						},
-						{
-							"name": {
-								"value": "Salads"
-							}
-						},
-						{
-							"name": {
-								"value": "Street Tacos"
+								"value": "category"
 							}
 						}
 					]
@@ -206,82 +181,12 @@
 					"values": [
 						{
 							"name": {
-								"value": "Cheese Curds"
+								"value": "Standard Burger"
 							}
 						},
 						{
 							"name": {
-								"value": "Mini Tacos"
-							}
-						},
-						{
-							"name": {
-								"value": "Black Bean Burger"
-							}
-						},
-						{
-							"name": {
-								"value": "Cowboy"
-							}
-						},
-						{
-							"name": {
-								"value": "California"
-							}
-						},
-						{
-							"name": {
-								"value": "Classic Hamburger"
-							}
-						},
-						{
-							"name": {
-								"value": "Double"
-							}
-						},
-						{
-							"name": {
-								"value": "Turkey"
-							}
-						},
-						{
-							"name": {
-								"value": "Tex-Mex"
-							}
-						},
-						{
-							"name": {
-								"value": "Peanut Butter Bacon"
-							}
-						},
-						{
-							"name": {
-								"value": "Gouda Bacon"
-							}
-						},
-						{
-							"name": {
-								"value": "Cesar Wrap"
-							}
-						},
-						{
-							"name": {
-								"value": "Zesty Melt"
-							}
-						},
-						{
-							"name": {
-								"value": "Quesadilla"
-							}
-						},
-						{
-							"name": {
-								"value": "Blooming Onion"
-							}
-						},
-						{
-							"name": {
-								"value": "Onion Rings"
+								"value": "Cheeseburger"
 							}
 						},
 						{
@@ -291,47 +196,17 @@
 						},
 						{
 							"name": {
-								"value": "Nachos"
-							}
-						},
-						{
-							"name": {
-								"value": "Chicken Strips"
-							}
-						},
-						{
-							"name": {
-								"value": "Teriaki Wings"
-							}
-						},
-						{
-							"name": {
-								"value": "Samurai Wings"
-							}
-						},
-						{
-							"name": {
 								"value": "Traditional Tots"
 							}
 						},
 						{
 							"name": {
-								"value": "Ranch Tots"
-							}
-						},
-						{
-							"name": {
-								"value": "Cajun Tots"
-							}
-						},
-						{
-							"name": {
 								"value": "Chicken Strips"
 							}
 						},
 						{
 							"name": {
-								"value": "Buffalo Strips"
+								"value": "Cheese Curds"
 							}
 						},
 						{
@@ -341,112 +216,217 @@
 						},
 						{
 							"name": {
-								"value": "Cheese Quesadilla"
+								"value": "Tripple Dipper"
 							}
 						},
 						{
 							"name": {
-								"value": "Chicken Quesadilla"
+								"value": "Southwestern Eggrolls"
 							}
 						},
 						{
 							"name": {
-								"value": "Loaded Nachos"
+								"value": "Skillet Queso"
 							}
 						},
 						{
 							"name": {
-								"value": "Grilled Cheese"
+								"value": "Fried Pickles"
 							}
 						},
 						{
 							"name": {
-								"value": "Caprese Grilled Cheese"
+								"value": "Queso Burger"
 							}
 						},
 						{
 							"name": {
-								"value": "Chicken Avocado"
+								"value": "Mushroom Swiss Burger"
 							}
 						},
 						{
 							"name": {
-								"value": "Chicken Parmesan"
+								"value": "Southern Smokehouse Burger"
 							}
 						},
 						{
 							"name": {
-								"value": "Italian"
+								"value": "Carnitas Fajitas"
 							}
 						},
 						{
 							"name": {
-								"value": "Italian"
+								"value": "Mushroom Jack Chicken Fajitas"
 							}
 						},
 						{
 							"name": {
-								"value": "Bacon Chicken Ranch"
+								"value": "Black Bean & Veggie Fajitas"
 							}
 						},
 						{
 							"name": {
-								"value": "Bacon Chicken Chipotle"
+								"value": "Cajun Chicken Pasta"
 							}
 						},
 						{
 							"name": {
-								"value": "Chicken Caesar"
+								"value": "Cajun Shrimp Pasta"
 							}
 						},
 						{
 							"name": {
-								"value": "Mandarin Chicken"
+								"value": "Chipotle Chicken Fresh Mex Bowl"
 							}
 						},
 						{
 							"name": {
-								"value": "Firecracker"
+								"value": "Chipotle Shrimp Fresh Mex Bowl"
 							}
 						},
 						{
 							"name": {
-								"value": "Bacon Chicken Ranch"
+								"value": "Spicy Shrimp Tacos"
 							}
 						},
 						{
 							"name": {
-								"value": "Bacon Chicken Chipotle"
+								"value": "Ancho Salmon"
 							}
 						},
 						{
 							"name": {
-								"value": "Chicken Caesar"
+								"value": "Crispy Chicken Crispers"
 							}
 						},
 						{
 							"name": {
-								"value": "Mandarin Chicken"
+								"value": "Crispy Honey-Chipotle Chicken Crispers"
 							}
 						},
 						{
 							"name": {
-								"value": "Firecracker"
+								"value": "Honey-Chipotle Crispers® & Waffles"
 							}
 						},
 						{
 							"name": {
-								"value": "House"
+								"value": "Crispy Buffalo Bleu Crispers"
 							}
 						},
 						{
 							"name": {
-								"value": "Pork Carnitas"
+								"value": "Crispy Mango-Habanero Crispers"
 							}
 						},
 						{
 							"name": {
-								"value": "Beef Barbacoa"
+								"value": "test"
+							}
+						},
+						{
+							"name": {
+								"value": "Tripple Dipper"
+							}
+						},
+						{
+							"name": {
+								"value": "Southwestern Eggrolls"
+							}
+						},
+						{
+							"name": {
+								"value": "Skillet Queso"
+							}
+						},
+						{
+							"name": {
+								"value": "Fried Pickles"
+							}
+						},
+						{
+							"name": {
+								"value": "Queso Burger"
+							}
+						},
+						{
+							"name": {
+								"value": "Mushroom Swiss Burger"
+							}
+						},
+						{
+							"name": {
+								"value": "Southern Smokehouse Burger"
+							}
+						},
+						{
+							"name": {
+								"value": "Carnitas Fajitas"
+							}
+						},
+						{
+							"name": {
+								"value": "Mushroom Jack Chicken Fajitas"
+							}
+						},
+						{
+							"name": {
+								"value": "Black Bean & Veggie Fajitas"
+							}
+						},
+						{
+							"name": {
+								"value": "Cajun Chicken Pasta"
+							}
+						},
+						{
+							"name": {
+								"value": "Cajun Shrimp Pasta"
+							}
+						},
+						{
+							"name": {
+								"value": "Chipotle Chicken Fresh Mex Bowl"
+							}
+						},
+						{
+							"name": {
+								"value": "Chipotle Shrimp Fresh Mex Bowl"
+							}
+						},
+						{
+							"name": {
+								"value": "Spicy Shrimp Tacos"
+							}
+						},
+						{
+							"name": {
+								"value": "Ancho Salmon"
+							}
+						},
+						{
+							"name": {
+								"value": "Crispy Chicken Crispers"
+							}
+						},
+						{
+							"name": {
+								"value": "Crispy Honey-Chipotle Chicken Crispers"
+							}
+						},
+						{
+							"name": {
+								"value": "Honey-Chipotle Crispers® & Waffles"
+							}
+						},
+						{
+							"name": {
+								"value": "Crispy Buffalo Bleu Crispers"
+							}
+						},
+						{
+							"name": {
+								"value": "Crispy Mango-Habanero Crispers"
 							}
 						}
 					]

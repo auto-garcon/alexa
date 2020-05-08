@@ -12,19 +12,97 @@ const fetch = require('node-fetch');
 let jsonDinnerMenu = require("./dinner_menu.json")
 let jsonDrinkMenu = require("./drink_menu.json")
 const invocationName = "auto garcon";
+var alexaID = '';
+var restaurantID = 5;
+var tableNum = 1;
+var restaurantName = '';
+var isAlexaRegistered = false;
 
-async function fetch_data()
-{
-    let res = fetch("https://autogarcon.live/api/restaurant/5/menu");
-    res = await res;
-    res = res.json();
-    res = await res;
-    return res;
+async function fetch_data(restaurantID) {
+    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/menu';
+    let result = fetch(endpoint);
+    result = await result;
+    result = result.json();
+    result = await result;
+    // var menu=[];
+    // for (var i = 0; i < result.length; i++) {
+    //     if (result[i].status === "ACTIVE") {
+    //         for (var item = 0; item < result[i].menuItems.length; item++) {
+    //             menu.push(result[i].menuItems[item]);
+    //         };
+    //     };
+    // };
+    // return menu;
+    return result;
+};
+
+async function fetch_resturant(alexaID) {
+    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/menu';
+    let result = fetch(endpoint);
+    result = await result;
+    result = result.json();
+    result = await result;
+    
+    restaurantID = result.resturantID;
+    restaurantName = result.resturantName;
+    
+    return result;
+};
+
+async function validateAlexaInfo(restaurantID, tableNum) {
+    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID;
+    let result = fetch(endpoint);
+    result = await result;
+    result = result.json();
+    result = await result;
+    
+    // if the id is null then there is no alexa at that table
+    if (result.alexaID == null) {
+        isAlexaRegistered = true;
+    }
+    
+    return result;
 }
 
-fetch_data().then(result => {
-    jsonDinnerMenu = result[2].menuItems;
-});
+function httpsPost(path,body){
+    var options = {
+    hostname: 'autogarcon.live',
+    path: path,
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        }
+    };
+
+    var req = https.request(options, (res) => {
+    //console.log('statusCode:', res.statusCode);
+    });
+    req.write(JSON.stringify(body));
+    req.end();
+
+}
+/*
+async function httpsEmptyPost(path){
+    var options = {
+    hostname: 'autogarcon.live',
+    path: path,
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        }
+    };
+    var req = https.request(options, (res) => {
+        console.log('statusCode:', res.statusCode);
+    });
+    req.write(`{}`);
+    req.end();
+}
+
+var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/submit';
+
+httpsEmptyPost(submitOrderPath);
+
+*/
 
 // Session Attributes 
 //   Alexa will track attributes for you, by default only during the lifespan of your session.
@@ -40,7 +118,7 @@ function jsonParser(stringValue) {
    return objectValue;
 }
 
-const dinnerMenu = jsonParser(jsonDinnerMenu);
+var dinnerMenu = [];//jsonParser(jsonDinnerMenu);
 const drinkMenu = jsonParser(jsonDrinkMenu);
 
 //for our build order functionality
@@ -132,7 +210,19 @@ function GetDescription(itemObject){
 //AddToOrder: adds item to current order
 //Author:Max
 function AddToOrder(itemObject){
+    var item = { 
+    "menuItemID": itemObject.itemID, 
+    "menuID":itemObject.menuID,
+    "quantity":1,
+    "comments": itemObject.mod
+    };
+
+    var addToOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/add';
+
+    //This will keep it in our current order list so we don't have to repull when reading off the menu
     currentOrder.push(itemObject);
+    //This sends it to the database
+    httpsPost(addToOrderPath,item);
 }
 //RemoveFromOrder: removes an item from the current order
 //Author: Jack,Max
@@ -210,6 +300,14 @@ const AllergenFilter_Handler = {
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         let say = "";
         let allergen = "";
+        let isIsnot = "";
+        let slotValues = getSlotValues(request.intent.slots);
+        
+        if(handlerInput.requestEnvelope.request.intent.slots.IsIsnot === undefined) {
+            say = "couldn't resolve IsIsnot";
+        } else {
+            isIsnot = slotValues.IsIsnot.resolved;
+        }
         if (handlerInput.requestEnvelope.request.intent.slots.allergen === undefined) {
             say = 'Allergen not identified';
         } else {
@@ -217,9 +315,16 @@ const AllergenFilter_Handler = {
         }
         
         for(var i in dinnerMenu.items){
-                if(!dinnerMenu.items[i].allergens.includes(allergen.toLowerCase())){
+            if(isIsnot == "is") {
+                if(dinnerMenu.items[i].allergens.includes(allergen.toUpperCase())){
                     say+=dinnerMenu.items[i].name + ", ";    
                 }
+            } 
+            if(isIsnot == "isn't") {
+                if(!dinnerMenu.items[i].allergens.includes(allergen.toUpperCase())){
+                    say+=dinnerMenu.items[i].name + ", ";    
+                }
+            }
             
         }
         
@@ -525,14 +630,7 @@ const Pricing_Handler =  {
         let resolvedSlot;
 
 
-        // if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
             say = "$"+GetPrice(FindItem(slotValues.item.heardAs));
-        // }
-        // if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-           // say = "$"+GetPrice(FindItem(slotValues.item.heardAs));           
-            //slotStatus += 'which did not match any slot value. ';
-        //     console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
-        // }
 
 
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
@@ -583,37 +681,8 @@ const GetDescription_Handler =  {
         let resolvedSlot;
 
 
-        // if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
             say = GetDescription(FindItem(slotValues.item.heardAs));
-        // }
-        // if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-           // say = "$"+GetPrice(FindItem(slotValues.item.heardAs));           
-            //slotStatus += 'which did not match any slot value. ';
-        //     console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
-        // }
 
-
-        // if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-        //     if(slotValues.category.resolved=="drinks"){
-        //         say = drinkMenu.items.map(item => {
-        //             return item.name + " is $" + item.price;
-        //         }).join(", ");
-        //     }
-        //     else{
-        //         say = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
-        //             return item.name + " is $" + item.price;
-        //         }).join(", ");
-        //     }
-        // }
-        // if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-        //     var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
-        //             return item.name + " is $" + item.price;
-        //         }).join(", ");
-        //     say = elseMenu.length > 0 ? elseMenu : "I found no " + slotValues.category.heardAs + " items";
-        // }
-
-        //still just for testing if unwanted scripts run
-        //say += slotStatus;
 
         return responseBuilder
             .speak(say)
@@ -637,7 +706,7 @@ const BuildOrder_Handler =  {
         
         let slotValues = getSlotValues(request.intent.slots); 
         //fromIntent = request.intent.name;
-        let say = '';
+        let say = 'and error occured';
 
         let slotStatus = '';
         let resolvedSlot;
@@ -647,12 +716,15 @@ const BuildOrder_Handler =  {
             //AddToOrder(FindItem(slotValues.item.resolved));
             //say = "successfully added " +slotValues.item.heardAs +" to order.";
             currentItem = FindItem(slotValues.item.resolved);
+            say = "Would you like to add any modifications to " + currentItem.name + "?"
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             if(FindItem(slotValues.item.heardAs)!=undefined){
                 //AddToOrder(FindItem(slotValues.item.heardAs));
                 //say = "successfully added " +slotValues.item.heardAs +" to order.";
                 currentItem = FindItem(slotValues.item.heardAs);
+                say = "Would you like to add any modifications to " + currentItem.name + "?"
+
             }
             else{
                 say = "I could not find "+slotValues.item.heardAs+ " on the menu."
@@ -662,7 +734,7 @@ const BuildOrder_Handler =  {
         }
 
         //still just for testing if unwanted scripts run
-        say += slotStatus;
+        
 
         return responseBuilder
             .speak(say + " Would you like to add any modifications to " + currentItem.name + "?")
@@ -690,27 +762,6 @@ const ModifyItem_Handler =  {
         let resolvedSlot;
         
 
-
-        // if (slotValues.mod.ERstatus === 'ER_SUCCESS_MATCH') {
-            // if(slotValues.mod.resolved == "yes"){
-            //     say = "Which modifications would you like to make?";//currentItem.name +" 3";
-                //this needs to chain to itself again
-                // return responseBuilder
-                //     // .addElicitSlotDirective('mod', {
-                //     //     name: 'ModifyItem',
-                //     //     confirmationStatus: 'NONE',
-                //     //     slots: {}
-                //     // })
-                //     .speak("Which modifications would you like to make?")
-                //     .reprompt("Which modifications would you like to make?")
-                //     .getResponse();
-                //return responseBuilder.reprompt("Which modifications would you like to make");
-            // }
-            // else if(slotValues.mod.resolved != "no" && slotValues.mod.resolved != "none"){
-                // var modification = slotValues.mod.heardAs;
-            
-            
-                // if(FindItemInOrder(currentItem) != undefined){
                     if (currentItem.mod === undefined){
                         currentItem.mod = slotValues.mod.heardAs;
                     }
@@ -720,38 +771,6 @@ const ModifyItem_Handler =  {
                     //AddToOrder(currentItem);
                     say = "You added " +slotValues.mod.heardAs+ " to " + currentItem.name + ". Would you like to make any additional modifications?";
                     
-                    //var index = FindItemInOrder(currentItem);
-                    //var moddedItem = currentOrder[index];
-                    //if (moddedItem.mod === undefined){
-                    //    moddedItem.mod = slotValues.mod.heardAs;
-                    //}
-                    //else{
-                    //    moddedItem.mod += slotValues.mod.heardAs;
-                    //}
-                    //currentOrder[index] = moddedItem;
-                    //say = "you added "+slotValues.mod.heardAs+ " to "+currentItem.name + ". ";
-                // }else{
-                //     say = currentItem.name + " 4";
-                // }
-                
-                
-            //     }else{
-                   // say = currentItem.name+ " 4";           
-                // }
-
-                //add modification to item in order
-            // }
-            // else{
-                // say = "Okay"
-            // }
-            // say = " adding " + slotValues.mod.heardAs + " to " +currentItem.name;
-        // }
-        // if (slotValues.mod.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-        //   say = "I cannot add that type of modification to "+currentItem.name;
-        // }
-
-        // //still just for testing if unwanted scripts run
-        // say += slotStatus;
 
         return responseBuilder
             .speak(say)
@@ -928,23 +947,111 @@ const RemoveItem_Handler =  {
     },
 };
 
-//written by Amazon default.
+// LaunchRequest_Handler: fetches data and begins user interaction
+//written by Amazon default and Ben
 const LaunchRequest_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'LaunchRequest';
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
+        
         const responseBuilder = handlerInput.responseBuilder;
+        // get alexa id
+        alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
+        
+        async function getRestaurantInfo(alexaID){
+            // check if registered
+            const response = await fetch_resturant(alexaID).then(result => {
+                // get resturantID, table number, and resturant name
+                if (result.restaurantID != null) {
+                    // the device is registered
+                    restaurantID = result.restaurantID;
+                    restaurantName = result.restaurantName;
+                    tableNum = result.tableNum;
+                }
+                else {
+                    // the device is not registered; call the registration intent
+                    return responseBuilder.addElicitSlotDirective(['tablenumber', 'restaurantID'], {
+                        name: 'Registration',
+                        confirmationStatus: 'NONE'
+                    })
+                    .prompt('Where would you like to register your device to?')
+                    .speak(say)
+                    .reprompt("I did not catch that. A valid command would look like 'Register my device to resturant 1 table 1.'")
+                    .getResponse()
+                }
+            });   
+        };
+        
+        await getRestaurantInfo(alexaID);
 
-        let say = 'hello' + ' and welcome to ' + invocationName + ' ! Say help to hear some options.';
+        // get data
+        async function buildMenu(){
+        
+            const response = await fetch_data(restaurantID).then(result => {
+                for (var i = 0; i < result.length; i++) {
+                    if (result[i].status === "ACTIVE") {
+                        for (var item = 0; item < result[i].menuItems.length; item++) {
+                            dinnerMenu.push(result[i].menuItems[item]);
+                        };
+                    };
+                };
+            });
 
+            //CREATES A NEW ORDER FOR THE CUSTOMER
+            var customer = {"customerID":1};
+            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
+            await httpsPost(newOrderPath,customer);
 
+            
+            return responseBuilder
+                .speak(say)
+                .reprompt('try again, ' + say)
+                .getResponse();
+        };
+        
+        var say = 'Hello' + ' and welcome to ' + restaurantName + ' ! Say help to hear some options.';
+        await buildMenu();
+    }
+};
 
+//Registration_Handler:Register the device to the database.
+//Author:Jack, Max.
+const Registration_Handler = {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'Registration' ;
+    },
+    async handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+        let say = '';
+        
+        // parse the restaurantID and tablenum
+        restaurantID = request.intent.slots.restaurantID;
+        tableNum = request.intent.slots.tablenumber;
+        
+        // check if its in the database
+        await validateAlexaInfo(restaurantID, tableNum);
+        if (isAlexaRegistered == false) {
+            // if not in the database, post it to the database
+            
+        }
+        else {
+            say = 'There is already an Alexa registered there.';
+        }
+        
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
-              .getResponse();
+            .getResponse()
+            .addDelegateDirective({
+            name: 'LaunchRequest',
+            confirmationStatus: 'NONE'
+            });
     },
 };
 
@@ -1388,7 +1495,8 @@ exports.handler = skillBuilder
         ModifyItem_Handler,
         ClearOrder_Handler,
         LaunchRequest_Handler, 
-        SessionEndedHandler
+        SessionEndedHandler,
+        Registration_Handler
     )
     .addErrorHandlers(ErrorHandler)
     .addRequestInterceptors(InitMemoryAttributesInterceptor)
