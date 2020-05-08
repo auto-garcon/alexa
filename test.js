@@ -1,3 +1,182 @@
+// Lambda Function code for Alexa.
+// Paste this into your index.js file. 
+//Testing functionality
+
+// const Alexa = require("ask-sdk-core");
+// const https = require("https");
+const fetch = require('node-fetch');
+
+
+
+
+// let jsonDinnerMenu = require("./dinner_menu.json")
+// let jsonDrinkMenu = require("./drink_menu.json")
+// const invocationName = "auto garcon";
+var finalDinnerMenu;
+async function fetch_data() {
+    let result = fetch("https://autogarcon.live/api/restaurant/5/menu");
+    result = await result;
+    result = result.json();
+    result = await result;
+    var dinnerMenu=[];
+    for (var i = 0; i < result.length; i++) {
+        if (result[i].status === "ACTIVE") {
+            for (var item = 0; item < result[i].menuItems.length; item++) {
+                dinnerMenu.push(result[i].menuItems[item]);
+            }
+        }
+    }
+    return dinnerMenu;
+}
+//finalDinnerMenu=fetch_data().then(result=>{console.log(result)});
+//console.log("2: "+finalDinnerMenu)
+
+// jsonDinnerMenu = [];
+// async function compileMenus(){
+
+//     menu = fetch_data().then(result => {
+//     //jsonDinnerMenu=[];
+//     for (var i = 0; i < result.length; i++) {
+//         if (result[i].status === "ACTIVE") {
+//             for (var item = 0; item < result[i].menuItems.length; item++) {
+//                 jsonDinnerMenu.push(result[i].menuItems[item]);
+//             }
+//             //console.log(result[i].menuItems)
+//             // jsonDinnerMenu.concat(result[i].menuItems);
+//             //console.log(i)
+//             //console.log(jsonDinnerMenu);
+//         }
+//     }
+//     });
+// }
+//return menu;
+//}
+// compileMenus();
+// console.log(menu)
+
+//setTimeout(function () { console.log(jsonDinnerMenu) }, 1500); //Takes somewhere between 1 to 1.5 seconds to process
+
+
+////////////////////////////////////////////////////////////
+
+var restaurantID = 5;
+var tableNumber = 1;
+
+var order = [{ a: 1 }];
+
+
+var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/submit';
+async function submitOrder(){
+
+    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/submit';
+    let res = fetch(endpoint, {
+        method: 'post'
+    })
+    .then(res => res.status);
+    setTimeout(function () { console.log(res) }, 1500);
+    
+}
+
+//submitOrder();
+
+
+var item = { 
+    "menuItemID": 2, 
+    "menuID":8,
+    "quantity":1,
+    "comments":""
+};
+
+var addToOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/add';
+async function addToOrder(){
+    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/add';
+    let res = await fetch(endpoint, {
+        method: 'post',
+        body: JSON.stringify(item),
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.status);
+    setTimeout(function () { console.log(res) }, 1500);
+    
+}
+//newOrder();
+//addToOrder();
+
+var customer = {"customerID":1}
+async function newOrder(){
+    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/new';
+    console.log(endpoint);
+    let res = await fetch(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(customer),
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(res => res.status);
+    setTimeout(function () { console.log(res) }, 1500);
+}
+
+
+
+const https = require('https');
+
+var customer = {"customerID":1};
+var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/new';
+function httpsPost(path,body){
+    var options = {
+    hostname: 'autogarcon.live',
+    path: path,
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        }
+    };
+
+    var req = https.request(options, (res) => {
+    console.log('statusCode:', res.statusCode);
+    //console.log('headers:', res.headers);
+
+    // res.on('data', (d) => {
+    //     process.stdout.write(d);
+    // });
+    });
+    req.write(JSON.stringify(body));
+    req.end();
+
+}
+async function httpsEmptyPost(path){
+    var options = {
+    hostname: 'autogarcon.live',
+    path: path,
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        }
+    };
+    var req = https.request(options, (res) => {
+        console.log('statusCode:', res.statusCode);
+    });
+    req.write(`{}`);
+    req.end();
+}
+
+//httpsPost(newOrderPath,customer);
+//httpsPost(addToOrderPath,item);
+httpsEmptyPost(submitOrderPath);
+
+/*
+const body = { a: 1 };
+ 
+fetch('https://httpbin.org/post', {
+        method: 'post',
+        body:    JSON.stringify(body),
+        headers: { 'Content-Type': 'application/json' },
+    })
+    .then(res => res.json())
+    .then(json => console.log(json));
+*/
+
+////////////////////////////////////////////////////////////////
+/*
 const Taxjar = require('taxjar');
 const client = new Taxjar({
     apiKey: "2837ad1585b8764c100a248d138eacfd"
@@ -57,8 +236,17 @@ client.taxForOrder({
     // console.log(res.tax.amount_to_collect);
   });
 
+
+
 //because of async, this gets evaluated before tax gets set to a value
 console.log(tax)
+
+
+  */
+ //////////////////////
+
+
+
 /*
 
 jsonDinnerMenu = require("./dinner_menu.json")
@@ -119,7 +307,7 @@ function ListOfCategories() {
             }
         }
     }
-    
+
 }
 
 
