@@ -26,5 +26,8 @@ After the restaurant owner is done setting up all of their menus in the database
 
 > node transform.js input.json
 
+This takes in the Auto-Garcon standard JSON menu format, and outputs an alexa compatible JSON object as out.json.
 
-This will output as out.json.
+> node transform_net.js https://autogarcon.live/api/restaurant/5/menu
+
+This hits an Auto-Garcon compatible API endpoint, and outputs an alexa compatible JSON object as out_net.json
