@@ -10,7 +10,6 @@ const fetch = require('node-fetch');
 
 
 let jsonDinnerMenu = require("./dinner_menu.json")
-let jsonDrinkMenu = require("./drink_menu.json")
 const invocationName = "auto garcon";
 var alexaID = '';
 var restaurantID = 5;
@@ -29,7 +28,7 @@ async function fetch_data(restaurantID) {
 async function fetch_restaurant(alexaID) {
     alexaID = '1';
     
-    let res = fetch("https://autogarcon.live/api/tables");
+    let res = fetch("https://autogarcon.live/api/restaurant/5/tables?alexaid=1");
     res = await res;
     res = res.json();
     res = await res;
@@ -108,7 +107,6 @@ function jsonParser(stringValue) {
 }
 
 var dinnerMenu = [];//jsonParser(jsonDinnerMenu);
-var drinkMenu = jsonParser(jsonDrinkMenu);
 
 //for our build order functionality
 var currentOrder = [];
@@ -136,11 +134,6 @@ function FindItem(itemName){
     for (var i = 0; i < dinnerMenu.length; i++) {
         if(dinnerMenu[i].name.toLowerCase() == itemName.toLowerCase()){
             return dinnerMenu[i];
-        }
-    }
-    for (var i = 0; i < drinkMenu.length; i++) {
-        if(drinkMenu[i].name.toLowerCase() == itemName.toLowerCase()){
-            return drinkMenu[i];
         }
     }
 }
@@ -325,22 +318,12 @@ const FilterByPrice_Handler = {
         price = parseFloat(price);
         //if the user specified a category
         if(handlerInput.requestEnvelope.request.intent.slots.category.value !== undefined){
-            
-            if(handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase() == "drinks")
-            {
-                for(var i in drinkMenu)
-                {
-                    itemsInCategory.push(drinkMenu.items[i]);
+             for(var i in dinnerMenu) {
+                if(dinnerMenu[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
+                    itemsInCategory.push(dinnerMenu[i]);
                 }
-            }
-            else{
-             for(var i in dinnerMenu)
-                {
-                    if(dinnerMenu[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
-                        itemsInCategory.push(dinnerMenu[i]);
-                    }
-                }   
-            }
+            }   
+            
             if(overUnder.toLowerCase() === "under"){
                 for(var i in itemsInCategory){
                         if(itemsInCategory[i].price <= price){
@@ -348,8 +331,6 @@ const FilterByPrice_Handler = {
                         }
                 }
             }
-        
-        
             if(overUnder.toLowerCase() === "over"){
                 for(var i in itemsInCategory){
                         if(itemsInCategory[i].price >= price){
@@ -366,11 +347,6 @@ const FilterByPrice_Handler = {
                             say+=dinnerMenu[i].name + ", ";    
                         }
                 }
-                for(var i in drinkMenu.items){
-                         if(drinkMenu[i].price <= price){
-                             say+=drinkMenu[i].name + ", ";    
-                         }
-                }
             }
         
         
@@ -380,20 +356,15 @@ const FilterByPrice_Handler = {
                             say+=dinnerMenu[i].name + ", ";    
                         }
                 }
-                for(var i in drinkMenu){
-                        if(drinkMenu[i].price >= price){
-                            say+=drinkMenu[i].name + ", ";    
-                        }
-                }
-            
             }
+            
         }
         
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
             .getResponse();
-    },
+    }
 };
 
 
@@ -587,16 +558,9 @@ const Pricing_Handler =  {
 
 
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-            if(slotValues.category.resolved=="drinks"){
-                say = drinkMenu.items.map(item => {
-                    return item.name + " is $" + item.price;
-                }).join(", ");
-            }
-            else{
-                say = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
-                    return item.name + " is $" + item.price;
-                }).join(", ");
-            }
+            say = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
+                return item.name + " is $" + item.price;
+            }).join(", ");
         }
         if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
@@ -943,10 +907,10 @@ const LaunchRequest_Handler =  {
         let say = 'test';
         // get alexa id
         alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
-        
+        alexaID = "1";
         // check if registered
         await fetch_restaurant(alexaID).then(result => {
-            // get resturantID, table number, and resturant name
+            //get resturantID, table number, and resturant name
             if (result.restaurantID != null) {
                 // the device is registered
                 restaurantID = result.restaurantID;
