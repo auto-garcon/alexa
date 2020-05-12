@@ -27,8 +27,9 @@ async function fetch_data(restaurantID) {
 };
 
 async function fetch_restaurant(alexaID) {
-    //alexaID = '1';
-    let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID + "/tables?alexaid=" + alexaID);
+    alexaID = '1';
+    
+    let res = fetch("https://autogarcon.live/api/tables");
     res = await res;
     res = res.json();
     res = await res;
@@ -823,7 +824,7 @@ const ReadCurrentOrder_Handler = {
 };
 
 //Registration_Handler:.
-//Author:Jack, Max.
+/*//Author:.
 const RestaurantRegistration_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -850,7 +851,7 @@ const RestaurantRegistration_Handler = {
             confirmationStatus: 'NONE'
             });
     },
-};
+};*/
 
 //ClearOrder_Handler: Deletes all items in the current order.
 //Author:Jack, Max.
@@ -946,7 +947,7 @@ const LaunchRequest_Handler =  {
         // check if registered
         await fetch_restaurant(alexaID).then(result => {
             // get resturantID, table number, and resturant name
-            if(result.restaurantID != null){
+            if (result.restaurantID != null) {
                 // the device is registered
                 restaurantID = result.restaurantID;
                 tableNum = result.tableNumber;
@@ -954,21 +955,20 @@ const LaunchRequest_Handler =  {
                 
                 say = 'hello and welcome to ' + restaurantName + ' ! Say help to hear some options.'
                 
-                if(result.currentOrder.orderItems.length > 0){
+                if (result.currentOrder.orderItems.length > 0) {
                     // there is an old order
                     
                     //ADD RESUMEORDER INTENT HERE
-                    
                 }
             }
             else {
                 // the device is not registered
                 return responseBuilder
-                .addElicitSlotDirective({
+                /*.addElicitSlotDirective({
                     name: 'RestaurantRegistration',
                     confirmationStatus: 'NONE',
                     slots: {}
-                })
+                })*/
                 .speak("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
                 .reprompt("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
                 .getResponse()
@@ -1437,8 +1437,8 @@ exports.handler = skillBuilder
         ModifyItem_Handler,
         ClearOrder_Handler,
         LaunchRequest_Handler, 
-        SessionEndedHandler,
-        RestaurantRegistration_Handler
+        SessionEndedHandler//,
+        //RestaurantRegistration_Handler
     )
     .addErrorHandlers(ErrorHandler)
     .addRequestInterceptors(InitMemoryAttributesInterceptor)
