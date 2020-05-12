@@ -16,53 +16,25 @@ var alexaID = '';
 var restaurantID = 5;
 var tableNum = 1;
 var restaurantName = '';
-var isAlexaRegistered = false;
 
 async function fetch_data(restaurantID) {
-    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/menu';
+    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/menu/available';
     let result = fetch(endpoint);
     result = await result;
     result = result.json();
     result = await result;
-    // var menu=[];
-    // for (var i = 0; i < result.length; i++) {
-    //     if (result[i].status === "ACTIVE") {
-    //         for (var item = 0; item < result[i].menuItems.length; item++) {
-    //             menu.push(result[i].menuItems[item]);
-    //         };
-    //     };
-    // };
-    // return menu;
     return result;
 };
 
-async function fetch_resturant(alexaID) {
-    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/menu';
-    let result = fetch(endpoint);
-    result = await result;
-    result = result.json();
-    result = await result;
+async function fetch_restaurant(alexaID) {
+    //alexaID = '1';
+    let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID + "/tables?alexaid=" + alexaID);
+    res = await res;
+    res = res.json();
+    res = await res;
     
-    restaurantID = result.resturantID;
-    restaurantName = result.resturantName;
-    
-    return result;
+    return res;
 };
-
-async function validateAlexaInfo(restaurantID, tableNum) {
-    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID;
-    let result = fetch(endpoint);
-    result = await result;
-    result = result.json();
-    result = await result;
-    
-    // if the id is null then there is no alexa at that table
-    if (result.alexaID == null) {
-        isAlexaRegistered = true;
-    }
-    
-    return result;
-}
 
 function httpsPost(path,body){
     var options = {
@@ -80,7 +52,23 @@ function httpsPost(path,body){
     req.write(JSON.stringify(body));
     req.end();
 
-}
+};
+
+function httpsGet(path){
+    var options = {
+    hostname: 'autogarcon.live',
+    path: path,
+    method: 'GET'
+    };
+    const req = https.request(options, res => {
+        console.log(`statusCode: ${res.statusCode}`)
+      
+        res.on('data', d => {
+          process.stdout.write(d)
+        });
+      });
+    req.end();
+};
 /*
 async function httpsEmptyPost(path){
     var options = {
@@ -119,69 +107,39 @@ function jsonParser(stringValue) {
 }
 
 var dinnerMenu = [];//jsonParser(jsonDinnerMenu);
-const drinkMenu = jsonParser(jsonDrinkMenu);
+var drinkMenu = jsonParser(jsonDrinkMenu);
 
 //for our build order functionality
 var currentOrder = [];
 var currentItem;
-var categories = [];
 var catIndex = 0;
 //ListOfCategories:fills the categories array with the appropriate category 
 //Author:Max
 function ListOfCategories() {
-    for (var i = 0; i < dinnerMenu.items.length; i++) {
-        if (categories.length == 0) {
-            categories[catIndex] = dinnerMenu.items[i].category;
-            catIndex += 1;
-        }
-        else{
-            var alreadyIn = 0;
-            for (var j = 0; j < categories.length; j++) {
-                if(dinnerMenu.items[i].category == categories[j]){
-                    alreadyIn=1;
-                }
-            }
-            if(alreadyIn!=1){
-                categories[catIndex] = dinnerMenu.items[i].category;
-                catIndex += 1;
-                alreadyIn =0;
-            }
+    let categories = [];
+    
+    for (var i = 0; i < dinnerMenu.length; i++){
+        let category = dinnerMenu[i].category.toString();
+        category = category.replace('&', ' and ');
+        if(categories.includes(category) == false){
+            categories.push(category);
         }
     }
-    categories[catIndex] = "Drinks";
-    // for (var i = 0; i < drinkMenu.items.length; i++) {
-    //     if (categories.length == 0) {
-    //         categories[catIndex] = drinkMenu.items[i].category;
-    //         catIndex += 1;
-    //     }
-    //     else{
-    //         var alreadyIn = 0;
-    //         for (var j = 0; j < categories.length; j++) {
-    //             if(drinkMenu.items[i].category == categories[j]){
-    //                 alreadyIn=1;
-    //             }
-    //         }
-    //         if(alreadyIn!=1){
-    //             categories[catIndex] = drinkMenu.items[i].category;
-    //             catIndex += 1;
-    //             alreadyIn =0;
-    //         }
-    //     }
-    // }
     
+    return categories.toString().trim();
 }
 
 //FindItem:this will return an object based on a text string match with the name of the item
 //Author:Max
 function FindItem(itemName){
-    for (var i = 0; i < dinnerMenu.items.length; i++) {
-        if(dinnerMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
-            return dinnerMenu.items[i];
+    for (var i = 0; i < dinnerMenu.length; i++) {
+        if(dinnerMenu[i].name.toLowerCase() == itemName.toLowerCase()){
+            return dinnerMenu[i];
         }
     }
-    for (var i = 0; i < drinkMenu.items.length; i++) {
-        if(drinkMenu.items[i].name.toLowerCase() == itemName.toLowerCase()){
-            return drinkMenu.items[i];
+    for (var i = 0; i < drinkMenu.length; i++) {
+        if(drinkMenu[i].name.toLowerCase() == itemName.toLowerCase()){
+            return drinkMenu[i];
         }
     }
 }
@@ -314,15 +272,15 @@ const AllergenFilter_Handler = {
             allergen = handlerInput.requestEnvelope.request.intent.slots.allergen.value;
         }
         
-        for(var i in dinnerMenu.items){
+        for(var i in dinnerMenu){
             if(isIsnot == "is") {
-                if(dinnerMenu.items[i].allergens.includes(allergen.toUpperCase())){
-                    say+=dinnerMenu.items[i].name + ", ";    
+                if(dinnerMenu[i].allergens.includes(allergen.toUpperCase())){
+                    say+=dinnerMenu[i].name + ", ";    
                 }
             } 
             if(isIsnot == "isn't") {
-                if(!dinnerMenu.items[i].allergens.includes(allergen.toUpperCase())){
-                    say+=dinnerMenu.items[i].name + ", ";    
+                if(!dinnerMenu[i].allergens.includes(allergen.toUpperCase())){
+                    say+=dinnerMenu[i].name + ", ";    
                 }
             }
             
@@ -369,16 +327,16 @@ const FilterByPrice_Handler = {
             
             if(handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase() == "drinks")
             {
-                for(var i in drinkMenu.items)
+                for(var i in drinkMenu)
                 {
                     itemsInCategory.push(drinkMenu.items[i]);
                 }
             }
             else{
-             for(var i in dinnerMenu.items)
+             for(var i in dinnerMenu)
                 {
-                    if(dinnerMenu.items[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
-                        itemsInCategory.push(dinnerMenu.items[i]);
+                    if(dinnerMenu[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
+                        itemsInCategory.push(dinnerMenu[i]);
                     }
                 }   
             }
@@ -402,28 +360,28 @@ const FilterByPrice_Handler = {
         //otherwise the user didn't specify a category
         else{
             if(overUnder.toLowerCase() === "under"){
-                for(var i in dinnerMenu.items){
-                        if(dinnerMenu.items[i].price <= price){
-                            say+=dinnerMenu.items[i].name + ", ";    
+                for(var i in dinnerMenu){
+                        if(dinnerMenu[i].price <= price){
+                            say+=dinnerMenu[i].name + ", ";    
                         }
                 }
                 for(var i in drinkMenu.items){
-                         if(drinkMenu.items[i].price <= price){
-                             say+=drinkMenu.items[i].name + ", ";    
+                         if(drinkMenu[i].price <= price){
+                             say+=drinkMenu[i].name + ", ";    
                          }
                 }
             }
         
         
             if(overUnder.toLowerCase() === "over"){
-                for(var i in dinnerMenu.items){
-                        if(dinnerMenu.items[i].price >= price){
-                            say+=dinnerMenu.items[i].name + ", ";    
+                for(var i in dinnerMenu){
+                        if(dinnerMenu[i].price >= price){
+                            say+=dinnerMenu[i].name + ", ";    
                         }
                 }
-                for(var i in drinkMenu.items){
-                        if(drinkMenu.items[i].price >= price){
-                            say+=drinkMenu.items[i].name + ", ";    
+                for(var i in drinkMenu){
+                        if(drinkMenu[i].price >= price){
+                            say+=drinkMenu[i].name + ", ";    
                         }
                 }
             
@@ -553,7 +511,7 @@ const ReadMenu_Handler = {
     const request = handlerInput.requestEnvelope.request;
     return request.type === 'IntentRequest' && request.intent.name === 'ReadMenu';
   },
-  handle(handlerInput) {
+  async handle(handlerInput) {
     const request = handlerInput.requestEnvelope.request;
     const responseBuilder = handlerInput.responseBuilder;
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
@@ -564,53 +522,47 @@ const ReadMenu_Handler = {
 
     let slotValues = getSlotValues(request.intent.slots);
 
-    ListOfCategories();
-    var catString = ' ';
-    for (var j = 0; j < categories.length; j++) {
-      catString += categories[j] + ", ";
-    }
-    
-    let say = "Here are the categories on the menu: "+ catString + ". Try requesting a certain category to be read.";
+    var catString = await ListOfCategories();
+    var say = '';
+    //catString = catString.substr(0, 35);
+    say = "Here are the categories on the menu: "+ catString + ". Try requesting a certain category to be read.";
 
 
     // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
 
     //   SLOT: category 
-
     if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-      if (slotValues.category.resolved.toLowerCase() == "drinks") {
-        var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
+    //   if (slotValues.category.resolved.toLowerCase() == "drinks") {
+    //     var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
 
-        say = "Here are the drinks I found: " + listOfDrinks;
-      }
-      else {
-        var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved.toLowerCase()).map(item => item.name).join(", ");
+    //     say = "Here are the drinks I found: " + listOfDrinks;
+    //   }
+    //   else {
+        var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved.toLowerCase()).map(item => item.name).join(", ");
         say = "Here are the " + slotValues.category.resolved + " I found: " + elseMenu;
+      //}
+    };
 
-      }
-    }
-    
     //This never gets triggered because she just doesn't recognize a category
     if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
       //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
-      var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs.toLowerCase()).map(item => item.name).join(", ");
+      var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.heardAs.toLowerCase()).map(item => item.name).join(", ");
       if (elseMenu.length > 0) {
         say = "Here are the " + slotValues.category.heardAs + " I found: " + elseMenu
       } else {
         say = "I found no " + slotValues.category.heardAs + " items";
       }
+    };
 
-    }
-
-    say += slotStatus;
-
-
+    say = say.substring(0, 100);
     return responseBuilder
       .speak(say)
-      .reprompt('try again, ' + say)
-      .getResponse();
-  },
+      .reprompt(say)
+      .getResponse()
+  }
 };
+
+
 //Pricing_Handler: Gets the price of a slotValue.
 //Author: Jack,Max.
 const Pricing_Handler =  {
@@ -640,13 +592,13 @@ const Pricing_Handler =  {
                 }).join(", ");
             }
             else{
-                say = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
+                say = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
                     return item.name + " is $" + item.price;
                 }).join(", ");
             }
         }
         if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            var elseMenu = dinnerMenu.items.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
+            var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
                     return item.name + " is $" + item.price;
                 }).join(", ");
             say = elseMenu.length > 0 ? elseMenu : "I found no " + slotValues.category.heardAs + " items";
@@ -870,6 +822,36 @@ const ReadCurrentOrder_Handler = {
     },
 };
 
+//Registration_Handler:.
+//Author:Jack, Max.
+const RestaurantRegistration_Handler = {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'Registration' ;
+    },
+    async handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        let say = '';
+
+        var slotValues = getSlotValues(request.intent.slots)
+        let slotStatus = '';
+        let resolvedSlot;
+        
+        say = "You registered to restaurant " + slotValues.restaurantID + " to " + slotValues.tablenumber + ".";
+        
+        return responseBuilder
+            .speak(say)
+            .reprompt("I'm sorry, try saying register my device to resturant 1 table number 1")
+            .getResponse()
+            .addDelegateDirective({
+            name: 'LaunchRequest',
+            confirmationStatus: 'NONE'
+            });
+    },
+};
+
 //ClearOrder_Handler: Deletes all items in the current order.
 //Author:Jack, Max.
 const ClearOrder_Handler = {
@@ -957,102 +939,61 @@ const LaunchRequest_Handler =  {
     async handle(handlerInput) {
         
         const responseBuilder = handlerInput.responseBuilder;
+        let say = 'test';
         // get alexa id
         alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
         
-        async function getRestaurantInfo(alexaID){
-            // check if registered
-            const response = await fetch_resturant(alexaID).then(result => {
-                // get resturantID, table number, and resturant name
-                if (result.restaurantID != null) {
-                    // the device is registered
-                    restaurantID = result.restaurantID;
-                    restaurantName = result.restaurantName;
-                    tableNum = result.tableNum;
+        // check if registered
+        await fetch_restaurant(alexaID).then(result => {
+            // get resturantID, table number, and resturant name
+            if(result.restaurantID != null){
+                // the device is registered
+                restaurantID = result.restaurantID;
+                tableNum = result.tableNumber;
+                restaurantName = 'test';
+                
+                say = 'hello and welcome to ' + restaurantName + ' ! Say help to hear some options.'
+                
+                if(result.currentOrder.orderItems.length > 0){
+                    // there is an old order
+                    
+                    //ADD RESUMEORDER INTENT HERE
+                    
                 }
-                else {
-                    // the device is not registered; call the registration intent
-                    return responseBuilder.addElicitSlotDirective(['tablenumber', 'restaurantID'], {
-                        name: 'Registration',
-                        confirmationStatus: 'NONE'
-                    })
-                    .prompt('Where would you like to register your device to?')
-                    .speak(say)
-                    .reprompt("I did not catch that. A valid command would look like 'Register my device to resturant 1 table 1.'")
-                    .getResponse()
-                }
-            });   
-        };
+            }
+            else {
+                // the device is not registered
+                return responseBuilder
+                .addElicitSlotDirective({
+                    name: 'RestaurantRegistration',
+                    confirmationStatus: 'NONE',
+                    slots: {}
+                })
+                .speak("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
+                .reprompt("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
+                .getResponse()
+            }
+        });
         
-        await getRestaurantInfo(alexaID);
-
         // get data
-        async function buildMenu(){
-        
-            const response = await fetch_data(restaurantID).then(result => {
-                for (var i = 0; i < result.length; i++) {
-                    if (result[i].status === "ACTIVE") {
-                        for (var item = 0; item < result[i].menuItems.length; item++) {
-                            dinnerMenu.push(result[i].menuItems[item]);
-                        };
-                    };
+        await fetch_data(restaurantID).then(result => {
+            for (var i = 0; i < result.length; i++) {
+                for (var j = 0; j < result[i].menuItems.length; j++) {
+                    dinnerMenu.push(result[i].menuItems[j]);
                 };
-            });
-
-            //CREATES A NEW ORDER FOR THE CUSTOMER
-            var customer = {"customerID":1};
-            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
-            await httpsPost(newOrderPath,customer);
-
-            
-            return responseBuilder
-                .speak(say)
-                .reprompt('try again, ' + say)
-                .getResponse();
-        };
+            };
+        });
         
-        var say = 'Hello' + ' and welcome to ' + restaurantName + ' ! Say help to hear some options.';
-        await buildMenu();
-    }
-};
-
-//Registration_Handler:Register the device to the database.
-//Author:Jack, Max.
-const Registration_Handler = {
-    canHandle(handlerInput) {
-        const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'Registration' ;
-    },
-    async handle(handlerInput) {
-        const request = handlerInput.requestEnvelope.request;
-        const responseBuilder = handlerInput.responseBuilder;
-        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-
-        let say = '';
-        
-        // parse the restaurantID and tablenum
-        restaurantID = request.intent.slots.restaurantID;
-        tableNum = request.intent.slots.tablenumber;
-        
-        // check if its in the database
-        await validateAlexaInfo(restaurantID, tableNum);
-        if (isAlexaRegistered == false) {
-            // if not in the database, post it to the database
-            
-        }
-        else {
-            say = 'There is already an Alexa registered there.';
-        }
+        //CREATES A NEW ORDER FOR THE CUSTOMER
+        var customer = {"customerID":1};
+        var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
+        await httpsPost(newOrderPath,customer);
         
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
-            .getResponse()
-            .addDelegateDirective({
-            name: 'LaunchRequest',
-            confirmationStatus: 'NONE'
-            });
-    },
+            .getResponse();
+    }
 };
 
 //written by Amazon default
@@ -1092,7 +1033,7 @@ const AMAZON_YesIntent_Handler =  {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.YesIntent' ;
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
@@ -1135,7 +1076,8 @@ const AMAZON_YesIntent_Handler =  {
         }
         if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
             //DO ALL THE CODE TO SEND THE ORDER RIGHT HERE, maybe build it up in place order, but send it after confirmation
-            
+            var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/submit';
+            await httpsGet(submitOrderPath);
             say = ' Order confirmed and sent to kitchen';
             currentOrder=[];
             return responseBuilder
@@ -1496,7 +1438,7 @@ exports.handler = skillBuilder
         ClearOrder_Handler,
         LaunchRequest_Handler, 
         SessionEndedHandler,
-        Registration_Handler
+        RestaurantRegistration_Handler
     )
     .addErrorHandlers(ErrorHandler)
     .addRequestInterceptors(InitMemoryAttributesInterceptor)
