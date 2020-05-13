@@ -6,10 +6,6 @@ const Alexa = require("ask-sdk-core");
 const https = require("https");
 const fetch = require('node-fetch');
 
-
-
-
-let jsonDinnerMenu = require("./dinner_menu.json")
 const invocationName = "auto garcon";
 var alexaID = '';
 var restaurantID = '';
@@ -127,6 +123,7 @@ var dinnerMenu = [];//jsonParser(jsonDinnerMenu);
 var currentOrder = [];
 var currentItem;
 var catIndex = 0;
+
 //ListOfCategories:fills the categories array with the appropriate category 
 //Author:Max
 function ListOfCategories() {
@@ -169,11 +166,13 @@ function GetPrice(itemObject){
     return itemObject.price;
     
 }
+
 //GetPrice: returns the price of an item
 //Author: Ben
 function GetDescription(itemObject){
     return itemObject.description;
 }
+
 //AddToOrder: adds item to current order
 //Author:Max
 async function AddToOrder(itemObject){
@@ -191,6 +190,7 @@ async function AddToOrder(itemObject){
     //This sends it to the database
     await httpsPost(addToOrderPath,item);
 }
+
 //RemoveFromOrder: removes an item from the current order
 //Author: Jack,Max
 async function RemoveFromOrder(itemObject){
@@ -207,6 +207,7 @@ async function RemoveFromOrder(itemObject){
 
     return result;
 }
+
 //ReadCurrentOrder: reads back the current order
 //Author: Jack,Max
 function ReadCurrentOrder(){
@@ -226,6 +227,7 @@ function ReadCurrentOrder(){
     }
     return say; //+ fetched_time;
 }
+
 /////////////////////////////////////////////////////////////////////////////////
 //END GET LIST OF CATEGORIES
 
@@ -256,7 +258,6 @@ function getMemoryAttributes() {   const memoryAttributes = {
 };
 
 const maxHistorySize = 30; // remember only latest 20 intents 
-
 
 // 1. Intent Handlers =============================================
 const AllergenFilter_Handler = {
@@ -514,7 +515,7 @@ const ReadMenu_Handler = {
 
     var catString = await ListOfCategories();
     var say = '';
-    //catString = catString.substr(0, 35);
+
     say = "Here are the categories on the menu: "+ catString + ". Try requesting a certain category to be read.";
 
 
@@ -522,15 +523,8 @@ const ReadMenu_Handler = {
 
     //   SLOT: category 
     if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-    //   if (slotValues.category.resolved.toLowerCase() == "drinks") {
-    //     var listOfDrinks = drinkMenu.items.map(item => item.name).join(", ")
-
-    //     say = "Here are the drinks I found: " + listOfDrinks;
-    //   }
-    //   else {
-        var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved.toLowerCase()).map(item => item.name).join(", ");
+    var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved.toLowerCase()).map(item => item.name).join(", ");
         say = "Here are the " + slotValues.category.resolved + " I found: " + elseMenu;
-      //}
     };
 
     //This never gets triggered because she just doesn't recognize a category
@@ -576,16 +570,9 @@ const Pricing_Handler =  {
 
 
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-            if(slotValues.category.resolved=="drinks"){
-                say = drinkMenu.items.map(item => {
-                    return item.name + " is $" + item.price;
-                }).join(", ");
-            }
-            else{
-                say = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
-                    return item.name + " is $" + item.price;
-                }).join(", ");
-            }
+            say = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
+                return item.name + " is $" + item.price;
+            }).join(", ");
         }
         if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
@@ -1003,7 +990,7 @@ const LaunchRequest_Handler =  {
                 .reprompt("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
                 .getResponse()
             }
-        //});
+        });
         
         // get data
         await fetch_data(restaurantID).then(result => {
