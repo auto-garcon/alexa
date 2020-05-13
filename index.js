@@ -12,9 +12,10 @@ const fetch = require('node-fetch');
 let jsonDinnerMenu = require("./dinner_menu.json")
 const invocationName = "auto garcon";
 var alexaID = '';
-var restaurantID = 5;
-var tableNum = 1;
+var restaurantID = '';
+var tableNum = '';
 var restaurantName = '';
+var customerID = '';
 
 async function fetch_data(restaurantID) {
     let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/menu/available';
@@ -26,13 +27,27 @@ async function fetch_data(restaurantID) {
 };
 
 async function fetch_restaurant(alexaID) {
-    alexaID = '1';
-    
     let res = fetch("https://autogarcon.live/api/restaurant/5/tables?alexaid=1");
     res = await res;
     res = res.json();
     res = await res;
     
+    return res;
+};
+
+async function fetch_restaurant_info(alexaID) {
+    let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID + "/tables?alexaid=" + alexaID);
+    res = await res;
+    res = res.json();
+    res = await res;
+    return res;
+};
+
+async function fetch_restaurant_name(resturantID) {
+    let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID);
+    res = await res;
+    res = res.json();
+    res = await res;
     return res;
 };
 
@@ -161,7 +176,7 @@ function GetDescription(itemObject){
 }
 //AddToOrder: adds item to current order
 //Author:Max
-function AddToOrder(itemObject){
+async function AddToOrder(itemObject){
     var item = { 
     "menuItemID": itemObject.itemID, 
     "menuID":itemObject.menuID,
@@ -174,11 +189,11 @@ function AddToOrder(itemObject){
     //This will keep it in our current order list so we don't have to repull when reading off the menu
     currentOrder.push(itemObject);
     //This sends it to the database
-    httpsPost(addToOrderPath,item);
+    await httpsPost(addToOrderPath,item);
 }
 //RemoveFromOrder: removes an item from the current order
 //Author: Jack,Max
-function RemoveFromOrder(itemObject){
+async function RemoveFromOrder(itemObject){
     let newOrder = []
     for (let i = 0; i < currentOrder.length; i++) {
         if (currentOrder[i] !== itemObject) {
@@ -186,7 +201,10 @@ function RemoveFromOrder(itemObject){
         }
     }
     let result = currentOrder !== newOrder;
-    currentOrder = newOrder
+    currentOrder = newOrder;
+    var removeEndpoint = "/api/restaurant/"+restaurantID+"/tables/"+tableNum+"/order/remove";
+    await httpsPost(removeEndpoint,{"menuItemID":itemObject.itemID});
+
     return result;
 }
 //ReadCurrentOrder: reads back the current order
@@ -558,9 +576,16 @@ const Pricing_Handler =  {
 
 
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-            say = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
-                return item.name + " is $" + item.price;
-            }).join(", ");
+            if(slotValues.category.resolved=="drinks"){
+                say = drinkMenu.items.map(item => {
+                    return item.name + " is $" + item.price;
+                }).join(", ");
+            }
+            else{
+                say = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved).map(item => {
+                    return item.name + " is $" + item.price;
+                }).join(", ");
+            }
         }
         if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
@@ -787,8 +812,8 @@ const ReadCurrentOrder_Handler = {
     },
 };
 
-//Registration_Handler:.
-/*//Author:.
+// RestaurantRegistration_Handler: Ellicit the restuarant id for registration
+//Author: Ben
 const RestaurantRegistration_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -804,18 +829,41 @@ const RestaurantRegistration_Handler = {
         let slotStatus = '';
         let resolvedSlot;
         
-        say = "You registered to restaurant " + slotValues.restaurantID + " to " + slotValues.tablenumber + ".";
-        
+        restaurantID = slotValues.restaurantID;
+        say = 'I got restaurantID ' + restaurantID;
         return responseBuilder
             .speak(say)
-            .reprompt("I'm sorry, try saying register my device to resturant 1 table number 1")
+            .reprompt(say)
             .getResponse()
-            .addDelegateDirective({
-            name: 'LaunchRequest',
-            confirmationStatus: 'NONE'
-            });
     },
-};*/
+};
+
+// TableRegistration_Handler: Ellicit the table number for registration
+//Author: Ben
+const TableRegistration_Handler = {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'Registration' ;
+    },
+    async handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        let say = '';
+
+        var slotValues = getSlotValues(request.intent.slots)
+        let slotStatus = '';
+        let resolvedSlot;
+        
+        tableNum = slotValues.tableNum;
+        say = 'I got restaurantID ' + restaurantID + ' and table number ' + tableNum;
+                
+        return responseBuilder
+            .speak(say)
+            .reprompt("Try saying something like register my device to resturant 1")
+            .getResponse()
+    },
+};
 
 //ClearOrder_Handler: Deletes all items in the current order.
 //Author:Jack, Max.
@@ -824,14 +872,17 @@ const ClearOrder_Handler = {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'ClearOrder' ;
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         let say='';
         if (request.intent.confirmationStatus !== "DENIED") {
             currentOrder = [];
-            say = "Successfully cleared your order";               
+            say = "Successfully cleared your order";
+            var customer = {"customerID":1};
+            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
+            await httpsPost(newOrderPath,customer);
         }else{
             say = "Your order is still intact. What else can I do for you?"
         }
@@ -906,38 +957,53 @@ const LaunchRequest_Handler =  {
         const responseBuilder = handlerInput.responseBuilder;
         let say = 'test';
         // get alexa id
-        alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
+        // alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
         alexaID = "1";
-        // check if registered
+        
+        // get restaurant id
         await fetch_restaurant(alexaID).then(result => {
-            //get resturantID, table number, and resturant name
             if (result.restaurantID != null) {
-                // the device is registered
-                restaurantID = result.restaurantID;
-                tableNum = result.tableNumber;
-                restaurantName = 'test';
-                
-                say = 'hello and welcome to ' + restaurantName + ' ! Say help to hear some options.'
-                
-                if (result.currentOrder.orderItems.length > 0) {
-                    // there is an old order
+                // get resturantID and table number
+                fetch_restaurant_info(alexaID).then(async result => {
+                    // the device is registered
+                    restaurantID = result.restaurantID;
+                    tableNum = result.tableNumber;
+                    customerID = result.customerID;
                     
-                    //ADD RESUMEORDER INTENT HERE
-                }
+                    // get the restaurant name
+                    await fetch_restaurant_name(restaurantID).then(result =>{
+                      restaurantName = result.restaurantName; 
+                    });
+                    
+                    say = 'hello and welcome to ' + restaurantName + "restaurantID: "+restaurantID + ":"+tableNum+ ' !';
+                    
+                    if (result.currentOrder.orderItems.length > 0) {
+                        // there is an old order
+                        // populate the current order
+                        for(let i = 0; i < result.currentOrder.orderItems.length ;++i){
+                            currentOrder.push(result.currentOrder.orderItems[i]);
+                        }
+                        
+                        say += ' There is an unfinished order. Would you like to resume this order?';
+                    }
+                    else {
+                        say += ' Say help to hear some options.';
+                    }
+                });
             }
             else {
                 // the device is not registered
                 return responseBuilder
-                /*.addElicitSlotDirective({
+                .addElicitSlotDirective({
                     name: 'RestaurantRegistration',
                     confirmationStatus: 'NONE',
                     slots: {}
-                })*/
+                })
                 .speak("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
                 .reprompt("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
                 .getResponse()
             }
-        });
+        //});
         
         // get data
         await fetch_data(restaurantID).then(result => {
@@ -1050,6 +1116,14 @@ const AMAZON_YesIntent_Handler =  {
                 .getResponse();
         }
 
+        if (previousIntent=="LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
+            say = "Ok. Lets resume your order.";
+            return responseBuilder
+                .speak(say)
+                .reprompt(say)
+                .getResponse();
+        }
+
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
@@ -1092,6 +1166,12 @@ const AMAZON_NoIntent_Handler =  {
             // say += 'Your last intent was ' + previousIntent + '. ';
             say = "Okay. Feel free to continue modifying your order. Just say Place Order when you're ready to send it to the kitchen."
         }
+        
+        if (previousIntent=="LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
+            say = "Ok. Lets start a new order";
+            currentOrder = [];
+        }
+        
         return responseBuilder
             .speak(say)
             .reprompt('try again, ' + say)
@@ -1401,8 +1481,9 @@ exports.handler = skillBuilder
         ModifyItem_Handler,
         ClearOrder_Handler,
         LaunchRequest_Handler, 
-        SessionEndedHandler//,
-        //RestaurantRegistration_Handler
+        SessionEndedHandler,
+        RestaurantRegistration_Handler,
+        TableRegistration_Handler
     )
     .addErrorHandlers(ErrorHandler)
     .addRequestInterceptors(InitMemoryAttributesInterceptor)
