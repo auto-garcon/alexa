@@ -23,7 +23,7 @@ async function fetch_data(restaurantID) {
 };
 
 async function fetch_restaurant(alexaID) {
-    let res = fetch("https://autogarcon.live/api/restaurant/5/tables?alexaid=1");
+    let res = fetch("https://autogarcon.live/api//tables?alexaid=" + alexaID);
     res = await res;
     res = res.json();
     res = await res;
@@ -180,7 +180,8 @@ async function AddToOrder(itemObject){
     "menuItemID": itemObject.itemID, 
     "menuID":itemObject.menuID,
     "quantity":1,
-    "comments": itemObject.mod
+    "comments": itemObject.mod,
+    "price": itemObject.price
     };
 
     var addToOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/add';
@@ -867,7 +868,7 @@ const ClearOrder_Handler = {
         if (request.intent.confirmationStatus !== "DENIED") {
             currentOrder = [];
             say = "Successfully cleared your order";
-            var customer = {"customerID":1};
+            var customer = {"customerID":customerID};
             var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
             await httpsPost(newOrderPath,customer);
         }else{
@@ -948,35 +949,33 @@ const LaunchRequest_Handler =  {
         alexaID = "1";
         
         // get restaurant id
-        await fetch_restaurant(alexaID).then(result => {
+        await fetch_restaurant(alexaID).then(async result => {
             if (result.restaurantID != null) {
                 // get resturantID and table number
-                fetch_restaurant_info(alexaID).then(async result => {
-                    // the device is registered
-                    restaurantID = result.restaurantID;
-                    tableNum = result.tableNumber;
-                    customerID = result.customerID;
-                    
-                    // get the restaurant name
-                    await fetch_restaurant_name(restaurantID).then(result =>{
-                      restaurantName = result.restaurantName; 
-                    });
-                    
-                    say = 'hello and welcome to ' + restaurantName + "restaurantID: "+restaurantID + ":"+tableNum+ ' !';
-                    
-                    if (result.currentOrder.orderItems.length > 0) {
-                        // there is an old order
-                        // populate the current order
-                        for(let i = 0; i < result.currentOrder.orderItems.length ;++i){
-                            currentOrder.push(result.currentOrder.orderItems[i]);
-                        }
-                        
-                        say += ' There is an unfinished order. Would you like to resume this order?';
-                    }
-                    else {
-                        say += ' Say help to hear some options.';
-                    }
+                // the device is registered
+                restaurantID = result.restaurantID;
+                tableNum = result.tableNumber;
+                customerID = result.currentOrder.customerID;
+                
+                // get the restaurant name
+                await fetch_restaurant_name(restaurantID).then(result =>{
+                  restaurantName = result.restaurantName; 
                 });
+                
+                say = 'hello and welcome to ' + restaurantName + '!';
+                
+                if (result.currentOrder.orderItems.length > 0) {
+                    // there is an old order
+                    // populate the current order
+                    for(let i = 0; i < result.currentOrder.orderItems.length ;++i){
+                        currentOrder.push(result.currentOrder.orderItems[i]);
+                    }
+                    
+                    say += ' There is an unfinished order. Would you like to resume this order?';
+                }
+                else {
+                    say += ' Say help to hear some options.';
+                }
             }
             else {
                 // the device is not registered
@@ -1000,11 +999,6 @@ const LaunchRequest_Handler =  {
                 };
             };
         });
-        
-        //CREATES A NEW ORDER FOR THE CUSTOMER
-        var customer = {"customerID":1};
-        var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
-        await httpsPost(newOrderPath,customer);
         
         return responseBuilder
             .speak(say)
@@ -1125,7 +1119,7 @@ const AMAZON_NoIntent_Handler =  {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NoIntent' ;
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
@@ -1157,6 +1151,10 @@ const AMAZON_NoIntent_Handler =  {
         if (previousIntent=="LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
             say = "Ok. Lets start a new order";
             currentOrder = [];
+            // update the db
+            var customer = {"customerID":customerID};
+            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
+            await httpsPost(newOrderPath,customer);
         }
         
         return responseBuilder
