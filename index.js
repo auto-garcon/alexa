@@ -1,6 +1,6 @@
 // Lambda Function code for Alexa.
 // Paste this into your index.js file. 
-//Testing functionality
+// Testing functionality
 
 const Alexa = require("ask-sdk-core");
 const https = require("https");
@@ -28,14 +28,6 @@ async function fetch_restaurant(alexaID) {
     res = res.json();
     res = await res;
     
-    return res;
-};
-
-async function fetch_restaurant_info(alexaID) {
-    let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID + "/tables?alexaid=" + alexaID);
-    res = await res;
-    res = res.json();
-    res = await res;
     return res;
 };
 
@@ -802,54 +794,70 @@ const ReadCurrentOrder_Handler = {
 
 // RestaurantRegistration_Handler: Ellicit the restuarant id for registration
 //Author: Ben
-const RestaurantRegistration_Handler = {
+const RestaurantRegistration_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'Registration' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'RestaurantRegistration';
     },
-    async handle(handlerInput) {
+    handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let slotValues = getSlotValues(request.intent.slots); 
         let say = '';
 
-        var slotValues = getSlotValues(request.intent.slots)
         let slotStatus = '';
         let resolvedSlot;
         
-        restaurantID = slotValues.restaurantID;
-        say = 'I got restaurantID ' + restaurantID;
+        restaurantID = slotValues.restaurantID.heardAs;
+        
+        say = "You said restaurant " + restaurantID +". What table number would you like to register to?";
+
         return responseBuilder
+            .addElicitSlotDirective('tableNumber', {
+                name: 'TableRegistration',
+                confirmationStatus: 'NONE',
+                slots: {}
+            })
             .speak(say)
             .reprompt(say)
-            .getResponse()
+            .getResponse();
     },
 };
 
 // TableRegistration_Handler: Ellicit the table number for registration
 //Author: Ben
-const TableRegistration_Handler = {
+const TableRegistration_Handler =  {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'Registration' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'TableRegistration';
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        
+        let slotValues = getSlotValues(request.intent.slots); 
         let say = '';
 
-        var slotValues = getSlotValues(request.intent.slots)
         let slotStatus = '';
         let resolvedSlot;
         
-        tableNum = slotValues.tableNum;
-        say = 'I got restaurantID ' + restaurantID + ' and table number ' + tableNum;
-                
+        tableNum = slotValues.tableNumber.heardAs;
+        
+        say = "Registering to restuarant " + restaurantID +" and table number " + tableNum + ". Please relaunch Auto Garcon.";
+
+        // register these to the database
+        var registerEndpoint = "/api/restaurant/"+restaurantID+"/tables/"+tableNum+"/register"
+
+        await httpsPost(registerEndpoint,{"alexaID":alexaID});
+        
         return responseBuilder
             .speak(say)
-            .reprompt("Try saying something like register my device to resturant 1")
-            .getResponse()
+            .reprompt(say)
+            .withShouldEndSession(true)
+            .getResponse();
     },
 };
 
@@ -943,14 +951,18 @@ const LaunchRequest_Handler =  {
     async handle(handlerInput) {
         
         const responseBuilder = handlerInput.responseBuilder;
-        let say = 'test';
+        let say = '';
         // get alexa id
         // alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
         alexaID = "1";
+        var isRegistered = true;
         
         // get restaurant id
         await fetch_restaurant(alexaID).then(async result => {
-            if (result.restaurantID != null) {
+            //result.restaurantID = undefined;
+            let a = 1;
+            alexaID = '3';
+            if (a > 1) {//result.restaurantID != undefined) {
                 // get resturantID and table number
                 // the device is registered
                 restaurantID = result.restaurantID;
@@ -978,18 +990,24 @@ const LaunchRequest_Handler =  {
                 }
             }
             else {
-                // the device is not registered
-                return responseBuilder
-                .addElicitSlotDirective({
+                say = '';
+                isRegistered = false;
+
+            }
+        });
+
+        if(isRegistered == false) {
+            // the device is not registered
+            return responseBuilder
+                .addElicitSlotDirective('restaurantID', {
                     name: 'RestaurantRegistration',
                     confirmationStatus: 'NONE',
                     slots: {}
                 })
-                .speak("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
-                .reprompt("The device does not appear to be registered. What restaurant I.D. would you like to register it to?")
+                .speak('The device does not appear to be registered. What restaurant I.D. would you like to register it to?')
+                .reprompt('I did not catch that. What restaurant I.D. would you like to register it to?')
                 .getResponse()
-            }
-        });
+        }
         
         // get data
         await fetch_data(restaurantID).then(result => {
