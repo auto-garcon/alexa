@@ -953,16 +953,13 @@ const LaunchRequest_Handler =  {
         const responseBuilder = handlerInput.responseBuilder;
         let say = '';
         // get alexa id
-        // alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
+        //alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
         alexaID = "1";
-        var isRegistered = true;
         
+        var isRegistered = true;
         // get restaurant id
         await fetch_restaurant(alexaID).then(async result => {
-            //result.restaurantID = undefined;
-            let a = 1;
-            alexaID = '3';
-            if (a > 1) {//result.restaurantID != undefined) {
+            if (result.restaurantID != null) {
                 // get resturantID and table number
                 // the device is registered
                 restaurantID = result.restaurantID;
@@ -974,7 +971,7 @@ const LaunchRequest_Handler =  {
                   restaurantName = result.restaurantName; 
                 });
                 
-                say = 'hello and welcome to ' + restaurantName + '!';
+                say = 'Hello and welcome to ' + restaurantName + '!';
                 
                 if (result.currentOrder.orderItems.length > 0) {
                     // there is an old order
@@ -990,7 +987,6 @@ const LaunchRequest_Handler =  {
                 }
             }
             else {
-                say = '';
                 isRegistered = false;
 
             }
