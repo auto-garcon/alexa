@@ -72,42 +72,13 @@ function httpsGet(path){
       });
     req.end();
 };
-/*
-async function httpsEmptyPost(path){
-    var options = {
-    hostname: 'autogarcon.live',
-    path: path,
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        }
-    };
-    var req = https.request(options, (res) => {
-        console.log('statusCode:', res.statusCode);
-    });
-    req.write(`{}`);
-    req.end();
-}
 
-var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNumber+'/order/submit';
-
-httpsEmptyPost(submitOrderPath);
-
-*/
-
-// Session Attributes 
-//   Alexa will track attributes for you, by default only during the lifespan of your session.
-//   The history[] array will track previous request(s), used for contextual Help/Yes/No handling.
-//   Set up DynamoDB persistence to have the skill save and reload these attributes between skill sessions.
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-//THIS IS GETTING A LIST OF CATEGORIES
-function jsonParser(stringValue) {
-
-   var string = JSON.stringify(stringValue);
-   var objectValue = JSON.parse(string);
-   return objectValue;
-}
+// cleanString: cleans the string for characters Alexa cannot say
+// author: Ben
+function cleanString (target) {
+    target = target.replace('&', ' and ').trim().replace('-', ' ').replace('_', ' ').replace('+', ' ');
+    return target;
+};
 
 var dinnerMenu = [];//jsonParser(jsonDinnerMenu);
 
@@ -129,7 +100,7 @@ function ListOfCategories() {
         }
     }
     
-    return categories.toString().trim();
+    return categories.join(', ').trim();
 }
 
 //FindItem:this will return an object based on a text string match with the name of the item
@@ -146,10 +117,10 @@ function FindItem(itemName){
 //Author:Max
 function FindItemInOrder(itemObject){
     for (let i = 0; i < currentOrder.length; i++) {
-    if (currentOrder[i] === itemObject) {
-       return i;
+        if (currentOrder[i] === itemObject) {
+            return i;
+        }
     }
-}
 }
 
 //GetPrice: returns the price of an item
@@ -210,7 +181,7 @@ function ReadCurrentOrder(){
     }
     else{
         for(var i =0; i < currentOrder.length; i++){
-            if(currentOrder[i].mod !== undefined){
+            if(currentOrder[i].mod !== "" && currentOrder[i].mod !== undefined){
                 say += currentOrder[i].name + " with "+currentOrder[i].mod+", "
             }
             else{
@@ -258,15 +229,16 @@ const AllergenFilter_Handler = {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'AllergenFilter' ;
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
         let say = "";
         let allergen = "";
         let isIsnot = "";
+        let allergyItems = [];
+        let itemName = "";
         let slotValues = getSlotValues(request.intent.slots);
-        
         if(handlerInput.requestEnvelope.request.intent.slots.IsIsnot === undefined) {
             say = "couldn't resolve IsIsnot";
         } else {
@@ -277,26 +249,30 @@ const AllergenFilter_Handler = {
         } else {
             allergen = handlerInput.requestEnvelope.request.intent.slots.allergen.value;
         }
-        
-        for(var i in dinnerMenu){
-            if(isIsnot == "is") {
+        for(var i in dinnerMenu) {
+          if(isIsnot == "is") {
                 if(dinnerMenu[i].allergens.includes(allergen.toUpperCase())){
-                    say+=dinnerMenu[i].name + ", ";    
+                    allergyItems.push(dinnerMenu[i]);
                 }
-            } 
-            if(isIsnot == "isn't") {
-                if(!dinnerMenu[i].allergens.includes(allergen.toUpperCase())){
-                    say+=dinnerMenu[i].name + ", ";    
+          }
+          if(isIsnot == "isn't") {
+              if(!dinnerMenu[i].allergens.includes(allergen.toUpperCase())){
+                    allergyItems.push(dinnerMenu[i]);
                 }
-            }
-            
+          }
+        }   
+        
+        for(var i in allergyItems){
+                    itemName = allergyItems[i].name.replace("&","and");
+                    itemName = itemName.replace("-"," ");
+                    say+=itemName + ", ";    
         }
         
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
-    },
+    }
 };
 
 //FilterByPrice_Handler: allows guest to filter items based on a price
@@ -306,7 +282,7 @@ const FilterByPrice_Handler = {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'FilterByPrice' ;
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
@@ -315,6 +291,7 @@ const FilterByPrice_Handler = {
         let price = '';
         let category = '';
         let itemsInCategory = [];
+        let itemName = "";
         if (handlerInput.requestEnvelope.request.intent.slots.overUnder === undefined) {
             say = 'overUnder not identified';
         } else {
@@ -330,7 +307,7 @@ const FilterByPrice_Handler = {
         price = parseFloat(price);
         //if the user specified a category
         if(handlerInput.requestEnvelope.request.intent.slots.category.value !== undefined){
-             for(var i in dinnerMenu) {
+            for(var i in dinnerMenu) {
                 if(dinnerMenu[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
                     itemsInCategory.push(dinnerMenu[i]);
                 }
@@ -339,14 +316,18 @@ const FilterByPrice_Handler = {
             if(overUnder.toLowerCase() === "under"){
                 for(var i in itemsInCategory){
                         if(itemsInCategory[i].price <= price){
-                            say+=itemsInCategory[i].name + ", ";    
+                            itemName = itemsInCategory[i].name.replace("&","and");
+                            itemName = itemName.replace("-"," ");
+                            say+=itemName + ", ";  
                         }
                 }
             }
             if(overUnder.toLowerCase() === "over"){
                 for(var i in itemsInCategory){
                         if(itemsInCategory[i].price >= price){
-                            say+=itemsInCategory[i].name + ", ";    
+                            itemName = itemsInCategory[i].name.replace("&","and");
+                            itemName = itemName.replace("-"," ");
+                            say+=itemName + ", ";  
                         }
                 }
             }
@@ -356,6 +337,9 @@ const FilterByPrice_Handler = {
             if(overUnder.toLowerCase() === "under"){
                 for(var i in dinnerMenu){
                         if(dinnerMenu[i].price <= price){
+                            itemName = dinnerMenu[i].name.replace("&","and");
+                            itemName = itemName.replace("-"," ");
+                            say+=itemName + ", ";  
                             say+=dinnerMenu[i].name + ", ";    
                         }
                 }
@@ -365,7 +349,10 @@ const FilterByPrice_Handler = {
             if(overUnder.toLowerCase() === "over"){
                 for(var i in dinnerMenu){
                         if(dinnerMenu[i].price >= price){
-                            say+=dinnerMenu[i].name + ", ";    
+                            itemName = dinnerMenu[i].name.replace("&","and");
+                            itemName = itemName.replace("-"," ");
+                            say+=itemName + ", ";  
+                            say+=dinnerMenu[i].name + ", ";  
                         }
                 }
             }
@@ -373,8 +360,8 @@ const FilterByPrice_Handler = {
         }
         
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     }
 };
@@ -440,7 +427,7 @@ const AMAZON_HelpIntent_Handler =  {
         say += ' Here something you can ask me: read menu, get the price or description an item, add something to your order, get the price of your order, filter items by price or allergen, and clear or place your order ';
 
         return responseBuilder
-            .speak(say)
+            .speak(cleanString(say))
             .reprompt('try again, ' + say)
             .getResponse();
     },
@@ -461,7 +448,7 @@ const AMAZON_StopIntent_Handler =  {
         let say = 'Okay, talk to you later! ';
 
         return responseBuilder
-            .speak(say)
+            .speak(cleanString(say))
             .withShouldEndSession(true)
             .getResponse();
     },
@@ -482,7 +469,7 @@ const AMAZON_NavigateHomeIntent_Handler =  {
 
 
         return responseBuilder
-            .speak(say)
+            .speak(cleanString(say))
             .reprompt('try again, ' + say)
             .getResponse();
     },
@@ -531,10 +518,9 @@ const ReadMenu_Handler = {
       }
     };
 
-    say = say.substring(0, 100);
     return responseBuilder
-      .speak(say)
-      .reprompt(say)
+      .speak(cleanString(say))
+      .reprompt(cleanString(say))
       .getResponse()
   }
 };
@@ -578,8 +564,8 @@ const Pricing_Handler =  {
         say += slotStatus;
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -607,8 +593,8 @@ const GetDescription_Handler =  {
 
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -635,15 +621,12 @@ const BuildOrder_Handler =  {
 
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            //AddToOrder(FindItem(slotValues.item.resolved));
-            //say = "successfully added " +slotValues.item.heardAs +" to order.";
             currentItem = FindItem(slotValues.item.resolved);
             say = "Would you like to add any modifications to " + currentItem.name + "?"
         }
+        
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             if(FindItem(slotValues.item.heardAs)!=undefined){
-                //AddToOrder(FindItem(slotValues.item.heardAs));
-                //say = "successfully added " +slotValues.item.heardAs +" to order.";
                 currentItem = FindItem(slotValues.item.heardAs);
                 say = "Would you like to add any modifications to " + currentItem.name + "?"
 
@@ -651,16 +634,13 @@ const BuildOrder_Handler =  {
             else{
                 say = "I could not find "+slotValues.item.heardAs+ " on the menu."
             }
-            //slotStatus += 'which did not match any slot value. ';
-            //console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
         }
 
         //still just for testing if unwanted scripts run
-        
 
         return responseBuilder
-            .speak(say + " Would you like to add any modifications to " + currentItem.name + "?")
-            .reprompt("Would you like to add any modifications to " + currentItem.name + "?")
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -695,8 +675,8 @@ const ModifyItem_Handler =  {
                     
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -727,18 +707,15 @@ const PlaceOrder_Handler =  {
                     "menuItemID": currentOrder[i].itemID,
                     "notes": currentOrder[i].mod
                 }
-               // ids += currentOrder[i].itemID + ", ";
             }            
         }
         //orderItems will then be added to the ticket that we send off with the table number, restaurant id ...
-
-
-        let say = "Your order consists of " + ReadCurrentOrder() + " . Are you ready to send your order to the kitchen?";// + " Item ids are: "+ids;
+        let say = "Your order consists of " + ReadCurrentOrder() + " . Are you ready to send your order to the kitchen?";
         
         
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -763,8 +740,8 @@ const PriceOfOrder_Handler =  {
 
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -782,12 +759,10 @@ const ReadCurrentOrder_Handler = {
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
         let say = ReadCurrentOrder();
-        //say = await fetch("https://showcase.linx.twenty57.net:8081/UnixTime/tounixtimestamp?datetime=now");
-        //say = await say.json();
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -820,8 +795,8 @@ const RestaurantRegistration_Handler =  {
                 confirmationStatus: 'NONE',
                 slots: {}
             })
-            .speak(say)
-            .reprompt(say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -854,8 +829,8 @@ const TableRegistration_Handler =  {
         await httpsPost(registerEndpoint,{"alexaID":alexaID});
         
         return responseBuilder
-            .speak(say)
-            .reprompt(say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .withShouldEndSession(true)
             .getResponse();
     },
@@ -885,8 +860,8 @@ const ClearOrder_Handler = {
 
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -935,8 +910,8 @@ const RemoveItem_Handler =  {
 
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -974,8 +949,10 @@ const LaunchRequest_Handler =  {
                 say = 'Hello and welcome to ' + restaurantName + '!';
                 
                 if (result.currentOrder.orderItems.length > 0) {
+                    // clear the local order
+                    currentOrder = [];
                     // there is an old order
-                    // populate the current order
+                    // populate the current order; match object information
                     for(let i = 0; i < result.currentOrder.orderItems.length ;++i){
                         currentOrder.push(result.currentOrder.orderItems[i]);
                     }
@@ -1010,13 +987,24 @@ const LaunchRequest_Handler =  {
             for (var i = 0; i < result.length; i++) {
                 for (var j = 0; j < result[i].menuItems.length; j++) {
                     dinnerMenu.push(result[i].menuItems[j]);
+                    
+                    for(var k = 0; k < currentOrder.length; ++k){
+                        if(result[i].menuItems[j].menuID == currentOrder[k].menuID && result[i].menuItems[j].itemID == currentOrder[k].menuItemID) {
+                            let comments = "";
+                            if(currentOrder[k].comments != "Default OrderItem") {
+                                comments = currentOrder[k].comments;
+                            }
+                            currentOrder[k] = result[i].menuItems[j];
+                            currentOrder[k].mod = comments;
+                        }
+                    }
                 };
             };
         });
         
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     }
 };
@@ -1073,8 +1061,8 @@ const AMAZON_YesIntent_Handler =  {
                     name: 'ModifyItem',
                     confirmationStatus: 'NONE'
                 })
-                .speak(say)
-                .reprompt('try again, ' + say)
+                .speak(cleanString(say))
+                .reprompt(cleanString(say))
                 .getResponse();
         }
         if (previousIntent=="ModifyItem" && !handlerInput.requestEnvelope.session.new) {
@@ -1084,8 +1072,8 @@ const AMAZON_YesIntent_Handler =  {
                     name: 'ModifyItem',
                     confirmationStatus: 'NONE'
                 })
-                .speak(say)
-                .reprompt('try again, ' + say)
+                .speak(cleanString(say))
+                .reprompt(cleanString(say))
                 .getResponse();
         }
         if (previousIntent=="AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
@@ -1095,8 +1083,8 @@ const AMAZON_YesIntent_Handler =  {
                     name: 'PlaceOrder',
                     confirmationStatus: 'NONE'
                 })
-                .speak(say)
-                .reprompt('try again, ' + say)
+                .speak(cleanString(say))
+                .reprompt(cleanString(say))
                 .getResponse();
         }
         if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
@@ -1104,24 +1092,29 @@ const AMAZON_YesIntent_Handler =  {
             var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/submit';
             await httpsGet(submitOrderPath);
             say = ' Order confirmed and sent to kitchen';
+            // clear the order
             currentOrder=[];
+            var customer = {"customerID":customerID};
+            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
+            await httpsPost(newOrderPath,customer);
+            
             return responseBuilder
-                .speak(say)
-                .reprompt('try again, ' + say)
+                .speak(cleanString(say))
+                .reprompt(cleanString(say))
                 .getResponse();
         }
 
         if (previousIntent=="LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
             say = "Ok. Lets resume your order.";
             return responseBuilder
-                .speak(say)
-                .reprompt(say)
+                .speak(cleanString(say))
+                .reprompt(cleanString(say))
                 .getResponse();
         }
 
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
@@ -1172,8 +1165,8 @@ const AMAZON_NoIntent_Handler =  {
         }
         
         return responseBuilder
-            .speak(say)
-            .reprompt('try again, ' + say)
+            .speak(cleanString(say))
+            .reprompt(cleanString(say))
             .getResponse();
     },
 };
