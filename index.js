@@ -76,7 +76,9 @@ function httpsGet(path){
 // cleanString: cleans the string for characters Alexa cannot say
 // author: Ben
 function cleanString (target) {
-    target = target.replace('&', ' and ').trim().replace('-', ' ').replace('_', ' ').replace('+', ' ');
+    while (target.includes('&') || target.includes('-') || target.includes('_') || target.includes('+')) {
+        target = target.replace('&', ' and ').trim().replace('-', ' ').replace('_', ' ').replace('+', ' ');
+    }
     return target;
 };
 
@@ -197,28 +199,28 @@ function ReadCurrentOrder(){
 
 //Amazon default function
 function getMemoryAttributes() {   const memoryAttributes = {
-       "history":[],
+      "history":[],
 
         // The remaining attributes will be useful after DynamoDB persistence is configured
-       "launchCount":0,
-       "lastUseTimestamp":0,
+      "launchCount":0,
+      "lastUseTimestamp":0,
 
-       "lastSpeechOutput":{},
-       "nextIntent":[]
+      "lastSpeechOutput":{},
+      "nextIntent":[]
 
-       // "favoriteColor":"",
-       // "name":"",
-       // "namePronounce":"",
-       // "email":"",
-       // "mobileNumber":"",
-       // "city":"",
-       // "state":"",
-       // "postcode":"",
-       // "birthday":"",
-       // "bookmark":0,
-       // "wishlist":[],
-   };
-   return memoryAttributes;
+      // "favoriteColor":"",
+      // "name":"",
+      // "namePronounce":"",
+      // "email":"",
+      // "mobileNumber":"",
+      // "city":"",
+      // "state":"",
+      // "postcode":"",
+      // "birthday":"",
+      // "bookmark":0,
+      // "wishlist":[],
+  };
+  return memoryAttributes;
 };
 
 const maxHistorySize = 30; // remember only latest 20 intents 
@@ -278,7 +280,7 @@ const AllergenFilter_Handler = {
 //FilterByPrice_Handler: allows guest to filter items based on a price
 //Author: Zack.
 const FilterByPrice_Handler = {
-   canHandle(handlerInput) {
+  canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'FilterByPrice' ;
     },
@@ -340,7 +342,6 @@ const FilterByPrice_Handler = {
                             itemName = dinnerMenu[i].name.replace("&","and");
                             itemName = itemName.replace("-"," ");
                             say+=itemName + ", ";  
-                            say+=dinnerMenu[i].name + ", ";    
                         }
                 }
             }
@@ -352,11 +353,14 @@ const FilterByPrice_Handler = {
                             itemName = dinnerMenu[i].name.replace("&","and");
                             itemName = itemName.replace("-"," ");
                             say+=itemName + ", ";  
-                            say+=dinnerMenu[i].name + ", ";  
                         }
                 }
             }
             
+        }
+        if(say == '') {
+            say = "There's nothing "+overUnder.toString()+ " "+price.toString();
+
         }
         
         return responseBuilder
@@ -614,7 +618,7 @@ const BuildOrder_Handler =  {
         
         let slotValues = getSlotValues(request.intent.slots); 
         //fromIntent = request.intent.name;
-        let say = 'and error occured';
+        let say = 'Please finish your item addition request with: to my order';
 
         let slotStatus = '';
         let resolvedSlot;
@@ -828,6 +832,10 @@ const TableRegistration_Handler =  {
 
         await httpsPost(registerEndpoint,{"alexaID":alexaID});
         
+        var customer = {"customerID":null};
+        var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
+        await httpsPost(newOrderPath,customer);
+        
         return responseBuilder
             .speak(cleanString(say))
             .reprompt(cleanString(say))
@@ -947,6 +955,10 @@ const LaunchRequest_Handler =  {
                 });
                 
                 say = 'Hello and welcome to ' + restaurantName + '!';
+                
+                if(customerID == null){
+                    say = "Please scan the QR code and press the button again."
+                }
                 
                 if (result.currentOrder.orderItems.length > 0) {
                     // clear the local order
@@ -1091,16 +1103,17 @@ const AMAZON_YesIntent_Handler =  {
             //DO ALL THE CODE TO SEND THE ORDER RIGHT HERE, maybe build it up in place order, but send it after confirmation
             var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/submit';
             await httpsGet(submitOrderPath);
-            say = ' Order confirmed and sent to kitchen';
+            say = ' Order confirmed and sent to kitchen.';
             // clear the order
-            currentOrder=[];
+            currentOrder = [];
             var customer = {"customerID":customerID};
             var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
             await httpsPost(newOrderPath,customer);
             
             return responseBuilder
-                .speak(cleanString(say))
+                .speak(cleanString(say + " Thank you for your order. Push the button to start another order."))
                 .reprompt(cleanString(say))
+                .withShouldEndSession(true)
                 .getResponse();
         }
 
@@ -1481,7 +1494,7 @@ exports.handler = skillBuilder
     .addRequestInterceptors(InitMemoryAttributesInterceptor)
     .addRequestInterceptors(RequestHistoryInterceptor)
 
-   // .addResponseInterceptors(ResponseRecordSpeechOutputInterceptor)
+  // .addResponseInterceptors(ResponseRecordSpeechOutputInterceptor)
 
  // .addRequestInterceptors(RequestPersistenceInterceptor)
  // .addResponseInterceptors(ResponsePersistenceInterceptor)
@@ -1534,6 +1547,8 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "what kind of grub do you got",
+                        "give me the grub for the day",
                         "read the {category} menu",
                         "read the {category}",
                         "what do you have for {category}",
@@ -1559,6 +1574,7 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "how much does a {item} cost",
                         "how much are your {category}",
                         "how much is {item}",
                         "how much does {item} cost",
@@ -1574,6 +1590,12 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "order a {item}",
+                        "add the {item} to order",
+                        "add a {item} to order",
+                        "add the {item} to my order",
+                        "add a {item} to my order",
+                        "add {item} to my order",
                         "add {item} to order",
                         "order {item}"
                     ]
@@ -1582,7 +1604,6 @@ const model = {
                     "name": "PlaceOrder",
                     "slots": [],
                     "samples": [
-                        "confirm order",
                         "place my order",
                         "send my order",
                         "send order to kitchen",
@@ -1635,6 +1656,11 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "take off {item} from my order",
+                        "take off {item}",
+                        "take off the {item} from my order",
+                        "remove {item} from my order",
+                        "remove the {item} from my order",
                         "I don't want {item}",
                         "get rid of {item}",
                         "delete {item}",
@@ -1659,6 +1685,7 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "get me the {category} {overUnder} {price}",
                         "what {category} are {overUnder} {price}",
                         "what items are {overUnder} {price}",
                         "get me the items {overUnder} {price}",
@@ -1675,12 +1702,15 @@ const model = {
                             "samples": [
                                 "vegan"
                             ]
+                        },
+                        {
+                            "name": "IsIsnot",
+                            "type": "IsIsnot"
                         }
                     ],
                     "samples": [
-                        "what doesn't contain {allergen}",
-                        "what isn't {allergen}",
-                        "get me everything that is not {allergen}",
+                        "get me everything that {IsIsnot} {allergen}",
+                        "what {IsIsnot} {allergen}",
                         "filter based on {allergen}"
                     ]
                 },
@@ -1693,6 +1723,14 @@ const model = {
                         }
                     ],
                     "samples": [
+                        "tell me about the {item}",
+                        "what is in the {item}",
+                        "what is on the {item}",
+                        "what's on the {item}",
+                        "get description of {item}",
+                        "what's on a {item}",
+                        "what is the {item}",
+                        "what's in the {item}",
                         "what is in {item}",
                         "what is on {item}",
                         "describe {item}",
@@ -1705,32 +1743,22 @@ const model = {
                         {
                             "name": "mod",
                             "type": "AMAZON.Food"
-                        },
-                        {
-                            "name": "item",
-                            "type": "item"
                         }
                     ],
                     "samples": [
-                        "can I add {mod} to {item}",
-                        "I want {mod} on {item}",
-                        "can I get {mod} on {item}",
-                        "can I get {mod} on the {item}",
-                        "I want to add {mod} to {item}",
-                        "I want to add {mod}",
-                        "{mod}",
-                        "add {mod}",
-                        "add {mod} to {item}"
+                        "can I get {mod}",
+                        "I want {mod}",
+                        "I want to add {mod}"
                     ]
                 },
                 {
                     "name": "ClearOrder",
                     "slots": [],
                     "samples": [
+                        "clear my order",
                         "start my order over",
                         "scratch everything",
                         "clear everything",
-                        "delete order",
                         "clear my current order",
                         "clear order"
                     ]
@@ -1742,12 +1770,48 @@ const model = {
                 {
                     "name": "AMAZON.NoIntent",
                     "samples": []
+                },
+                {
+                    "name": "RestaurantRegistration",
+                    "slots": [
+                        {
+                            "name": "restaurantID",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "register it to restaurant {restaurantID}",
+                        "restaurant number {restaurantID}",
+                        "restaurant {restaurantID}"
+                    ]
+                },
+                {
+                    "name": "TableRegistration",
+                    "slots": [
+                        {
+                            "name": "tableNumber",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "register to table number {tableNumber}",
+                        "table number {tableNumber}",
+                        "table {tableNumber}"
+                    ]
                 }
             ],
             "types": [
                 {
                     "name": "category",
                     "values": [
+                        {
+                            "name": {
+                                "value": "Chicken & Seafood",
+                                "synonyms": [
+                                    "Chicken and Seafood"
+                                ]
+                            }
+                        },
                         {
                             "name": {
                                 "value": "Drinks",
@@ -1820,6 +1884,26 @@ const model = {
                     "values": [
                         {
                             "name": {
+                                "value": "Firecracker Wrap"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Chicken Caesar Wrap"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Bacon Chicken Chipotle Wrap"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Bacon Chicken Ranch Wrap"
+                            }
+                        },
+                        {
+                            "name": {
                                 "value": "Cheese Curds"
                             }
                         },
@@ -1835,12 +1919,12 @@ const model = {
                         },
                         {
                             "name": {
-                                "value": "Cowboy"
+                                "value": "Cowboy Burger"
                             }
                         },
                         {
                             "name": {
-                                "value": "California"
+                                "value": "California Burger"
                             }
                         },
                         {
@@ -1850,17 +1934,17 @@ const model = {
                         },
                         {
                             "name": {
-                                "value": "Double"
+                                "value": "Double Burger"
                             }
                         },
                         {
                             "name": {
-                                "value": "Turkey"
+                                "value": "Turkey Burger"
                             }
                         },
                         {
                             "name": {
-                                "value": "Tex-Mex"
+                                "value": "Tex-Mex Burger"
                             }
                         },
                         {
@@ -1870,12 +1954,12 @@ const model = {
                         },
                         {
                             "name": {
-                                "value": "Gouda Bacon"
+                                "value": "Gouda Bacon Burger"
                             }
                         },
                         {
                             "name": {
-                                "value": "Cesar Wrap"
+                                "value": "Caesar Wrap"
                             }
                         },
                         {
@@ -1940,11 +2024,6 @@ const model = {
                         },
                         {
                             "name": {
-                                "value": "Chicken Strips"
-                            }
-                        },
-                        {
-                            "name": {
                                 "value": "Buffalo Strips"
                             }
                         },
@@ -1980,87 +2059,62 @@ const model = {
                         },
                         {
                             "name": {
-                                "value": "Chicken Avocado"
+                                "value": "Chicken Avocado Panini"
                             }
                         },
                         {
                             "name": {
-                                "value": "Chicken Parmesan"
+                                "value": "Chicken Parmesan Panini"
                             }
                         },
                         {
                             "name": {
-                                "value": "Italian"
+                                "value": "Italian Salad"
                             }
                         },
                         {
                             "name": {
-                                "value": "Italian"
+                                "value": "Bacon Chicken Ranch Salad"
                             }
                         },
                         {
                             "name": {
-                                "value": "Bacon Chicken Ranch"
+                                "value": "Bacon Chicken Chipotle Salad"
                             }
                         },
                         {
                             "name": {
-                                "value": "Bacon Chicken Chipotle"
+                                "value": "Chicken Caesar Salad"
                             }
                         },
                         {
                             "name": {
-                                "value": "Chicken Caesar"
+                                "value": "Mandarin Chicken Salad"
                             }
                         },
                         {
                             "name": {
-                                "value": "Mandarin Chicken"
+                                "value": "Firecracker Salad"
                             }
                         },
                         {
                             "name": {
-                                "value": "Firecracker"
+                                "value": "Mandarin Chicken Wrap"
                             }
                         },
                         {
                             "name": {
-                                "value": "Bacon Chicken Ranch"
+                                "value": "House Salad"
                             }
                         },
                         {
                             "name": {
-                                "value": "Bacon Chicken Chipotle"
+                                "value": "Pork Carnitas Street Tacos"
                             }
                         },
                         {
                             "name": {
-                                "value": "Chicken Caesar"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Mandarin Chicken"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Firecracker"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "House"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Pork Carnitas"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Beef Barbacoa"
+                                "value": "Beef Barbacoa Street Tacos"
                             }
                         }
                     ]
@@ -2139,12 +2193,42 @@ const model = {
                     "values": [
                         {
                             "name": {
-                                "value": "vegan"
+                                "value": "GLUTEN",
+                                "synonyms": [
+                                    "gluten"
+                                ]
                             }
                         },
                         {
                             "name": {
-                                "value": "gluten free"
+                                "value": "PORK",
+                                "synonyms": [
+                                    "pork"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "MEAT",
+                                "synonyms": [
+                                    "meat"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "DAIRY",
+                                "synonyms": [
+                                    "dairy"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "NUTS",
+                                "synonyms": [
+                                    "nuts"
+                                ]
                             }
                         }
                     ]
@@ -2152,6 +2236,31 @@ const model = {
                 {
                     "name": "AMAZON.Food",
                     "values": [
+                        {
+                            "name": {
+                                "value": "no ketchup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra ketchup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "ketchup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "no pickles"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "no onions"
+                            }
+                        },
                         {
                             "name": {
                                 "value": "extra mushrooms"
@@ -2203,6 +2312,91 @@ const model = {
                             }
                         }
                     ]
+                },
+                {
+                    "name": "mods",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "extra ketchup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "add mayonnaise"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "no ketchup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "ketchup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "add ketchup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "no onions"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra onions"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "no pickles"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra pickles"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "no cheese"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "extra cheese"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "IsIsnot",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "isn't",
+                                "synonyms": [
+                                    "is not",
+                                    "doesn't contain",
+                                    "does not contain"
+                                ]
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "is",
+                                "synonyms": [
+                                    "contains",
+                                    "is",
+                                    "does contain"
+                                ]
+                            }
+                        }
+                    ]
                 }
             ]
         },
@@ -2222,6 +2416,13 @@ const model = {
                             "prompts": {
                                 "elicitation": "Elicit.Slot.458766584741.717883134057"
                             }
+                        },
+                        {
+                            "name": "IsIsnot",
+                            "type": "IsIsnot",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
                         }
                     ]
                 },
@@ -2241,11 +2442,46 @@ const model = {
                 },
                 {
                     "name": "ClearOrder",
+                    "delegationStrategy": "SKILL_RESPONSE",
                     "confirmationRequired": true,
                     "prompts": {
                         "confirmation": "Confirm.Intent.1294309823697"
                     },
                     "slots": []
+                },
+                {
+                    "name": "PlaceOrder",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": []
+                },
+                {
+                    "name": "RestaurantRegistration",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "restaurantID",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        }
+                    ]
+                },
+                {
+                    "name": "TableRegistration",
+                    "confirmationRequired": false,
+                    "prompts": {},
+                    "slots": [
+                        {
+                            "name": "tableNumber",
+                            "type": "AMAZON.NUMBER",
+                            "confirmationRequired": false,
+                            "elicitationRequired": false,
+                            "prompts": {}
+                        }
+                    ]
                 }
             ],
             "delegationStrategy": "ALWAYS"
@@ -2275,6 +2511,60 @@ const model = {
                     {
                         "type": "PlainText",
                         "value": "Are you sure you would like to clear your current order?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.796532620091.1385443888808",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "The device does not appear to be registered. What restaurant I.D. would you like to register it to?"
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Slot.796532620091.1385443888808",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "I heard restuarant number {restaurantID} . Is that correct?"
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Slot.55843681209.364300331197",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "I heard you say {restaurantID} . Is that correct?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.55843681209.364300331197",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "What restaurant number would you like to register?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Slot.739606836541.880541492200",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "What table number would you like to register this device to?"
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Slot.739606836541.880541492200",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "I heard table number {tableNumber} . Is that correct?"
                     }
                 ]
             }
