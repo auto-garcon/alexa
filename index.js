@@ -1,4 +1,4 @@
-// Lambda Function code for Alexa.
+/// Lambda Function code for Alexa.
 // Paste this into your index.js file. 
 // Testing functionality
 
@@ -279,9 +279,8 @@ const AllergenFilter_Handler = {
         }   
         
         for(var i in allergyItems){
-                    itemName = allergyItems[i].name.replace("&","and");
-                    itemName = itemName.replace("-"," ");
-                    say+=itemName + ", ";    
+            itemName = allergyItems[i].name;
+            say+=itemName + ", ";    
         }
         
         return responseBuilder
@@ -883,7 +882,7 @@ const TableRegistration_Handler =  {
                 .getResponse();    
         }
 
-        say = "Registering to " + restaurantName + " at table number " + tableNum + ". Please relaunch Auto Garcon.";
+        say = "Registering to " + restaurantName + " table number " + tableNum + ". Please relaunch Auto Garcon.";
 
         // register these to the database
         var registerEndpoint = "/api/restaurant/"+restaurantID+"/tables/"+tableNum+"/register"
