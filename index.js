@@ -23,7 +23,7 @@ async function fetch_data(restaurantID) {
 };
 
 async function fetch_restaurant(alexaID) {
-    let res = fetch("https://autogarcon.live/api//tables?alexaid=" + alexaID);
+    let res = fetch("https://autogarcon.live/api/tables?alexaid=" + alexaID);
     res = await res;
     res = res.json();
     res = await res;
@@ -31,7 +31,15 @@ async function fetch_restaurant(alexaID) {
     return res;
 };
 
-async function fetch_restaurant_name(resturantID) {
+async function fetch_tables(restaurantID) {
+    let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID + "/tables");
+    res = await res;
+    res = res.json();
+    res = await res;
+    return res;
+};
+
+async function fetch_restaurant_name(restaurantID) {
     let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID);
     res = await res;
     res = res.json();
@@ -50,7 +58,6 @@ function httpsPost(path,body){
     };
 
     var req = https.request(options, (res) => {
-    //console.log('statusCode:', res.statusCode);
     });
     req.write(JSON.stringify(body));
     req.end();
@@ -77,7 +84,11 @@ function httpsGet(path){
 // author: Ben
 function cleanString (target) {
     while (target.includes('&') || target.includes('-') || target.includes('_') || target.includes('+')) {
-        target = target.replace('&', ' and ').trim().replace('-', ' ').replace('_', ' ').replace('+', ' ');
+        target = target.replace('&', ' and ');
+        target = target.trim();
+        target = target.replace('-', ' ');
+        target = target.replace('_', ' ');
+        target = target.replace('+', ' ');
     }
     return target;
 };
@@ -149,10 +160,13 @@ async function AddToOrder(itemObject){
     "price": itemObject.price
     };
 
+    var clone = JSON.parse(JSON.stringify(itemObject));
+
     var addToOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/add';
 
     //This will keep it in our current order list so we don't have to repull when reading off the menu
-    currentOrder.push(itemObject);
+    currentOrder.push(clone);
+    
     //This sends it to the database
     await httpsPost(addToOrderPath,item);
 }
@@ -403,11 +417,10 @@ const AMAZON_CancelIntent_Handler =  {
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
 
-        let say = 'Okay, talk to you later! ';
+        let say = 'Okay! What can I do for you?';
 
         return responseBuilder
             .speak(say)
-            .withShouldEndSession(true)
             .getResponse();
     },
 };
@@ -449,11 +462,10 @@ const AMAZON_StopIntent_Handler =  {
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
 
-        let say = 'Okay, talk to you later! ';
+        let say = 'Okay! What can I do for you?';
 
         return responseBuilder
             .speak(cleanString(say))
-            .withShouldEndSession(true)
             .getResponse();
     },
 };
@@ -626,12 +638,14 @@ const BuildOrder_Handler =  {
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
             currentItem = FindItem(slotValues.item.resolved);
+            currentItem.mod = "";
             say = "Would you like to add any modifications to " + currentItem.name + "?"
         }
         
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             if(FindItem(slotValues.item.heardAs)!=undefined){
                 currentItem = FindItem(slotValues.item.heardAs);
+                currentItem.mod = "";
                 say = "Would you like to add any modifications to " + currentItem.name + "?"
 
             }
@@ -668,7 +682,7 @@ const ModifyItem_Handler =  {
         let resolvedSlot;
         
 
-                    if (currentItem.mod === undefined){
+                    if (currentItem.mod === undefined || currentItem.mod === ""){
                         currentItem.mod = slotValues.mod.heardAs;
                     }
                     else{
@@ -778,7 +792,7 @@ const RestaurantRegistration_Handler =  {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'RestaurantRegistration';
     },
-    handle(handlerInput) {
+    async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
@@ -788,8 +802,26 @@ const RestaurantRegistration_Handler =  {
 
         let slotStatus = '';
         let resolvedSlot;
-        
+
         restaurantID = slotValues.restaurantID.heardAs;
+        if(restaurantID == undefined || isNaN(restaurantID) || parseInt(restaurantID) <= 0) {
+            say = "The restaurant I.D. you used is invalid. Please relaunch Auto Garcon and try a different restaurant I.D.";
+            return responseBuilder
+                .speak(cleanString(say))
+                .withShouldEndSession(true)
+                .getResponse();
+        }
+        
+        await fetch_restaurant_name(restaurantID).then(result =>{
+            restaurantName = result.restaurantName;})
+            
+        // this checks if the restaurant exists
+        if(restaurantName == null || restaurantName == undefined) {
+            return responseBuilder
+                .speak(cleanString("The restaurant I.D. you used is invalid. Please relaunch Auto Garcon and try a different restaurant I.D."))
+                .withShouldEndSession(true)
+                .getResponse();
+        }
         
         say = "You said restaurant " + restaurantID +". What table number would you like to register to?";
 
@@ -824,18 +856,39 @@ const TableRegistration_Handler =  {
         let resolvedSlot;
         
         tableNum = slotValues.tableNumber.heardAs;
+        if(tableNum == undefined || isNaN(tableNum) || parseInt(tableNum) <= 0) {
+
+            return responseBuilder
+                .speak("The table number you used is invalid. Please relaunch Auto Garcon and try a different table number.")
+                .withShouldEndSession(true)
+                .getResponse();
+        }
         
-        say = "Registering to restuarant " + restaurantID +" and table number " + tableNum + ". Please relaunch Auto Garcon.";
+        var numberOfTables = 0;
+        var found = false;
+
+        await fetch_tables(restaurantID).then(result =>{
+            numberOfTables = result.numTables;
+            for(let i = 0 ; i <result.tables.length; i++){
+                if(result.tables[i].tableNumber == parseInt(tableNum)){
+                    found = true;
+                }
+            }
+        })
+
+        if(found == false){
+            return responseBuilder
+                .speak("The table number you used is invalid. Please relaunch Auto Garcon and try a different table number.")
+                .withShouldEndSession(true)
+                .getResponse();    
+        }
+
+        say = "Registering to " + restaurantName + " at table number " + tableNum + ". Please relaunch Auto Garcon.";
 
         // register these to the database
         var registerEndpoint = "/api/restaurant/"+restaurantID+"/tables/"+tableNum+"/register"
-
         await httpsPost(registerEndpoint,{"alexaID":alexaID});
-        
-        var customer = {"customerID":null};
-        var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
-        await httpsPost(newOrderPath,customer);
-        
+
         return responseBuilder
             .speak(cleanString(say))
             .reprompt(cleanString(say))
@@ -935,10 +988,11 @@ const LaunchRequest_Handler =  {
         
         const responseBuilder = handlerInput.responseBuilder;
         let say = '';
-        // get alexa id
-        //alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();     
-        alexaID = "1";
         
+        // get alexa id
+        alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();
+        alexaID = "96";
+
         var isRegistered = true;
         // get restaurant id
         await fetch_restaurant(alexaID).then(async result => {
@@ -947,22 +1001,25 @@ const LaunchRequest_Handler =  {
                 // the device is registered
                 restaurantID = result.restaurantID;
                 tableNum = result.tableNumber;
+                // clear the local order
+                currentOrder = [];
+                if(result.currentOrder == null || result.currentOrder == undefined){
+                    say = "Please scan the Q.R. code and try again.";
+                    return responseBuilder
+                        .speak(cleanString(say))
+                        .reprompt(cleanString(say))
+                        .withShouldEndSession(true)
+                        .getResponse();
+                }
                 customerID = result.currentOrder.customerID;
-                
-                // get the restaurant name
+                // // get the restaurant name
                 await fetch_restaurant_name(restaurantID).then(result =>{
                   restaurantName = result.restaurantName; 
                 });
                 
                 say = 'Hello and welcome to ' + restaurantName + '!';
                 
-                if(customerID == null){
-                    say = "Please scan the QR code and press the button again."
-                }
-                
                 if (result.currentOrder.orderItems.length > 0) {
-                    // clear the local order
-                    currentOrder = [];
                     // there is an old order
                     // populate the current order; match object information
                     for(let i = 0; i < result.currentOrder.orderItems.length ;++i){
@@ -977,7 +1034,6 @@ const LaunchRequest_Handler =  {
             }
             else {
                 isRegistered = false;
-
             }
         });
 
@@ -1003,10 +1059,10 @@ const LaunchRequest_Handler =  {
                     for(var k = 0; k < currentOrder.length; ++k){
                         if(result[i].menuItems[j].menuID == currentOrder[k].menuID && result[i].menuItems[j].itemID == currentOrder[k].menuItemID) {
                             let comments = "";
-                            if(currentOrder[k].comments != "Default OrderItem") {
+                            if(currentOrder[k].comments != "Default OrderItem" && currentOrder[k].comments != "") {
                                 comments = currentOrder[k].comments;
                             }
-                            currentOrder[k] = result[i].menuItems[j];
+                            currentOrder[k] = JSON.parse(JSON.stringify(result[i].menuItems[j]));
                             currentOrder[k].mod = comments;
                         }
                     }
@@ -1041,12 +1097,11 @@ const ErrorHandler =  {
     handle(handlerInput, error) {
         const request = handlerInput.requestEnvelope.request;
 
-        console.log(`Error handled: ${error.message}`);
-        // console.log(`Original Request was: ${JSON.stringify(request, null, 2)}`);
+        var say = 'Sorry, an error occurred. Please relaunch the device.';
 
         return handlerInput.responseBuilder
-            .speak('Sorry, an error occurred.  Please say again.')
-            .reprompt('Sorry, an error occurred.  Please say again.')
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     }
 };
@@ -1100,18 +1155,15 @@ const AMAZON_YesIntent_Handler =  {
                 .getResponse();
         }
         if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
-            //DO ALL THE CODE TO SEND THE ORDER RIGHT HERE, maybe build it up in place order, but send it after confirmation
+            // send the order
             var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/submit';
             await httpsGet(submitOrderPath);
-            say = ' Order confirmed and sent to kitchen.';
+            say = 'Order confirmed and sent to kitchen.';
             // clear the order
             currentOrder = [];
-            var customer = {"customerID":customerID};
-            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
-            await httpsPost(newOrderPath,customer);
             
             return responseBuilder
-                .speak(cleanString(say + " Thank you for your order. Push the button to start another order."))
+                .speak(cleanString(say + " Thank you for your order. Scan the Q.R. code to start a new order."))
                 .reprompt(cleanString(say))
                 .withShouldEndSession(true)
                 .getResponse();
