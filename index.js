@@ -1,4 +1,4 @@
-/// Lambda Function code for Alexa.
+// Lambda Function code for Alexa.
 // Paste this into your index.js file. 
 // Testing functionality
 
@@ -13,8 +13,10 @@ var tableNum = '';
 var restaurantName = '';
 var customerID = '';
 
-async function fetch_data(restaurantID) {
-    let endpoint = 'https://autogarcon.live/api/restaurant/'+restaurantID+'/menu/available';
+//fetchData: gets the available menus from the database.
+//Authors: Jack
+async function fetchData(restaurantID) {
+    let endpoint = 'https://autogarcon.live/api/restaurant/' + restaurantID + '/menu/available';
     let result = fetch(endpoint);
     result = await result;
     result = result.json();
@@ -22,38 +24,43 @@ async function fetch_data(restaurantID) {
     return result;
 };
 
-async function fetch_restaurant(alexaID) {
+//fetchRestaurant: gets the restaurant based on the alexa ID from the database.
+//Authors: Ben
+async function fetchRestaurant(alexaID) {
     let res = fetch("https://autogarcon.live/api/tables?alexaid=" + alexaID);
     res = await res;
     res = res.json();
     res = await res;
-    
+
     return res;
 };
-
-async function fetch_tables(restaurantID) {
+//fetchTables: gets the tables associated with a restaurant.
+//Authors: Ben
+async function fetchTables(restaurantID) {
     let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID + "/tables");
     res = await res;
     res = res.json();
     res = await res;
     return res;
 };
-
-async function fetch_restaurant_name(restaurantID) {
+//fetchRestaurantName: gets restaurant specific data from the database.
+//Authors: Ben
+async function fetchRestaurantName(restaurantID) {
     let res = fetch("https://autogarcon.live/api/restaurant/" + restaurantID);
     res = await res;
     res = res.json();
     res = await res;
     return res;
 };
-
-function httpsPost(path,body){
+//httpsPost: Posts to the https endpoint
+//Authors: Max
+function httpsPost(path, body) {
     var options = {
-    hostname: 'autogarcon.live',
-    path: path,
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
+        hostname: 'autogarcon.live',
+        path: path,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
         }
     };
 
@@ -63,72 +70,59 @@ function httpsPost(path,body){
     req.end();
 
 };
-
-function httpsGet(path){
+//httpsGet: sends a Get request to the https endpoint
+//Authors: Max
+function httpsGet(path) {
     var options = {
-    hostname: 'autogarcon.live',
-    path: path,
-    method: 'GET'
+        hostname: 'autogarcon.live',
+        path: path,
+        method: 'GET'
     };
     const req = https.request(options, res => {
         console.log(`statusCode: ${res.statusCode}`)
-      
+
         res.on('data', d => {
-          process.stdout.write(d)
+            process.stdout.write(d)
         });
-      });
+    });
     req.end();
 };
 
-// cleanString: cleans the string for characters Alexa cannot say
-// author: Ben
-function cleanString (target) {
-    while (target.includes('&') || target.includes('-') || target.includes('_') || target.includes('+')) {
-        target = target.replace('&', ' and ');
-        target = target.trim();
-        target = target.replace('-', ' ');
-        target = target.replace('_', ' ');
-        target = target.replace('+', ' ');
-    }
-    return target;
-};
-
-var dinnerMenu = [];//jsonParser(jsonDinnerMenu);
+var dinnerMenu = [];
 
 //for our build order functionality
 var currentOrder = [];
 var currentItem;
 var catIndex = 0;
 
-//ListOfCategories:fills the categories array with the appropriate category 
+//listOfCategories:fills the categories array with the appropriate category 
 //Author:Max
-function ListOfCategories() {
+function listOfCategories() {
     let categories = [];
-    
-    for (var i = 0; i < dinnerMenu.length; i++){
+
+    for (var i = 0; i < dinnerMenu.length; i++) {
         let category = dinnerMenu[i].category.toString();
-        category = category.replace('&', ' and ');
-        if(categories.includes(category) == false){
+        if (categories.includes(category) == false) {
             categories.push(category);
         }
     }
-    
+
     return categories.join(', ').trim();
 }
 
-//FindItem:this will return an object based on a text string match with the name of the item
+//findItem:this will return an object based on a text string match with the name of the item
 //Author:Max
-function FindItem(itemName){
+function findItem(itemName) {
     for (var i = 0; i < dinnerMenu.length; i++) {
-        if(dinnerMenu[i].name.toLowerCase() == itemName.toLowerCase()){
+        if (dinnerMenu[i].name.toLowerCase() == itemName.toLowerCase()) {
             return dinnerMenu[i];
         }
     }
 }
 
-//FindItemInOrder:this will return the index of the itemObject in the current order
+//findItemInOrder:this will return the index of the itemObject in the current order
 //Author:Max
-function FindItemInOrder(itemObject){
+function findItemInOrder(itemObject) {
     for (let i = 0; i < currentOrder.length; i++) {
         if (currentOrder[i] === itemObject) {
             return i;
@@ -136,114 +130,131 @@ function FindItemInOrder(itemObject){
     }
 }
 
-//GetPrice: returns the price of an item
+//getPrice: returns the price of an item
 //Author: Max
-function GetPrice(itemObject){
+function getPrice(itemObject) {
     return itemObject.price;
-    
+
 }
 
-//GetPrice: returns the price of an item
+//getDescription: returns the price of an item
 //Author: Ben
-function GetDescription(itemObject){
+function getDescription(itemObject) {
     return itemObject.description;
 }
 
-//AddToOrder: adds item to current order
+//addToOrder: adds item to current order
 //Author:Max
-async function AddToOrder(itemObject){
-    var item = { 
-    "menuItemID": itemObject.itemID, 
-    "menuID":itemObject.menuID,
-    "quantity":1,
-    "comments": itemObject.mod,
-    "price": itemObject.price
+async function addToOrder(itemObject) {
+    var item = {
+        "menuItemID": itemObject.itemID,
+        "menuID": itemObject.menuID,
+        "quantity": 1,
+        "comments": itemObject.mod,
+        "price": itemObject.price
     };
 
     var clone = JSON.parse(JSON.stringify(itemObject));
 
-    var addToOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/add';
+    var addToOrderPath = '/api/restaurant/' + restaurantID + '/tables/' + tableNum + '/order/add';
 
     //This will keep it in our current order list so we don't have to repull when reading off the menu
     currentOrder.push(clone);
-    
+
     //This sends it to the database
-    await httpsPost(addToOrderPath,item);
+    await httpsPost(addToOrderPath, item);
 }
 
-//RemoveFromOrder: removes an item from the current order
+//removeFromOrder: removes an item from the current order
 //Author: Jack,Max
-async function RemoveFromOrder(itemObject){
-    let newOrder = []
+async function removeFromOrder(itemObject) {
+    let newOrder = [];
+    let removedID = -1;
     for (let i = 0; i < currentOrder.length; i++) {
-        if (currentOrder[i] !== itemObject) {
+        if (currentOrder[i].itemID !== itemObject.itemID) {
             newOrder.push(currentOrder[i])
+        } else if (removedID == currentOrder[i].itemID) {
+            newOrder.push(currentOrder[i])
+        } else {
+            removedID = itemObject.itemID;
         }
     }
     let result = currentOrder !== newOrder;
     currentOrder = newOrder;
-    var removeEndpoint = "/api/restaurant/"+restaurantID+"/tables/"+tableNum+"/order/remove";
-    await httpsPost(removeEndpoint,{"menuItemID":itemObject.itemID});
+    var removeEndpoint = "/api/restaurant/" + restaurantID + "/tables/" + tableNum + "/order/remove";
+    //remove this item from the current order by sending it to the remove endpoint
+    await httpsPost(removeEndpoint, { "menuItemID": itemObject.itemID });
 
     return result;
 }
 
-//ReadCurrentOrder: reads back the current order
+//readCurrentOrder: reads back the current order
 //Author: Jack,Max
-function ReadCurrentOrder(){
+function readCurrentOrder() {
     let say = "";
-    if(currentOrder.length == 0){
+    if (currentOrder.length == 0) {
         say = "There are currently no items in your order";
     }
-    else{
-        for(var i =0; i < currentOrder.length; i++){
-            if(currentOrder[i].mod !== "" && currentOrder[i].mod !== undefined){
-                say += currentOrder[i].name + " with "+currentOrder[i].mod+", "
+    else {
+        for (var i = 0; i < currentOrder.length; i++) {
+            if (currentOrder[i].mod !== "" && currentOrder[i].mod !== undefined) {
+                say += currentOrder[i].name + " with " + currentOrder[i].mod + ", "
             }
-            else{
+            else {
                 say += currentOrder[i].name + ", ";
             }
         }
     }
-    return say; //+ fetched_time;
+    return say;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 //END GET LIST OF CATEGORIES
 
 //Amazon default function
-function getMemoryAttributes() {   const memoryAttributes = {
-      "history":[],
+function getMemoryAttributes() {
+    const memoryAttributes = {
+        "history": [],
 
         // The remaining attributes will be useful after DynamoDB persistence is configured
-      "launchCount":0,
-      "lastUseTimestamp":0,
+        "launchCount": 0,
+        "lastUseTimestamp": 0,
 
-      "lastSpeechOutput":{},
-      "nextIntent":[]
-
-      // "favoriteColor":"",
-      // "name":"",
-      // "namePronounce":"",
-      // "email":"",
-      // "mobileNumber":"",
-      // "city":"",
-      // "state":"",
-      // "postcode":"",
-      // "birthday":"",
-      // "bookmark":0,
-      // "wishlist":[],
-  };
-  return memoryAttributes;
+        "lastSpeechOutput": {},
+        "nextIntent": []
+    };
+    return memoryAttributes;
 };
 
 const maxHistorySize = 30; // remember only latest 20 intents 
 
 // 1. Intent Handlers =============================================
-const AllergenFilter_Handler = {
-  canHandle(handlerInput) {
+//Shush_Handler: Shuts Alexa up.
+//Author: Zack,Max.
+const Shush_Handler = {
+    canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AllergenFilter' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'Shush';
+    },
+    handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        let say = '';
+
+        return responseBuilder
+            .speak(say)
+            .reprompt(say)
+            .getResponse();
+    },
+};
+
+//AllergenFilter_Handler: Allows the user to filter based on specific allergens
+//Authors: Zack
+const AllergenFilter_Handler = {
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'AllergenFilter';
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -255,37 +266,40 @@ const AllergenFilter_Handler = {
         let allergyItems = [];
         let itemName = "";
         let slotValues = getSlotValues(request.intent.slots);
-        if(handlerInput.requestEnvelope.request.intent.slots.IsIsnot === undefined) {
-            say = "couldn't resolve IsIsnot";
+        //checks to see if the slot can be resolved
+        if (handlerInput.requestEnvelope.request.intent.slots.IsIsnot === undefined) {
+            say = "please try again";
         } else {
             isIsnot = slotValues.IsIsnot.resolved;
         }
+        //checks if the allergen slot gets filled
         if (handlerInput.requestEnvelope.request.intent.slots.allergen === undefined) {
             say = 'Allergen not identified';
         } else {
             allergen = handlerInput.requestEnvelope.request.intent.slots.allergen.value;
         }
-        for(var i in dinnerMenu) {
-          if(isIsnot == "is") {
-                if(dinnerMenu[i].allergens.includes(allergen.toUpperCase())){
+        //loops through the menu and adds the correct items to be included or excluded.
+        for (var i in dinnerMenu) {
+            if (isIsnot == "is") {
+                if (dinnerMenu[i].allergens.includes(allergen.toUpperCase())) {
                     allergyItems.push(dinnerMenu[i]);
                 }
-          }
-          if(isIsnot == "isn't") {
-              if(!dinnerMenu[i].allergens.includes(allergen.toUpperCase())){
+            }
+            if (isIsnot == "isn't") {
+                if (!dinnerMenu[i].allergens.includes(allergen.toUpperCase())) {
                     allergyItems.push(dinnerMenu[i]);
                 }
-          }
-        }   
-        
-        for(var i in allergyItems){
-            itemName = allergyItems[i].name;
-            say+=itemName + ", ";    
+            }
         }
-        
+        //loops through all filtered items and adds them to the string say
+        for (var i in allergyItems) {
+            itemName = allergyItems[i].name;
+            say += itemName + ", ";
+        }
+
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     }
 };
@@ -293,9 +307,9 @@ const AllergenFilter_Handler = {
 //FilterByPrice_Handler: allows guest to filter items based on a price
 //Author: Zack.
 const FilterByPrice_Handler = {
-  canHandle(handlerInput) {
+    canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'FilterByPrice' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'FilterByPrice';
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -307,88 +321,88 @@ const FilterByPrice_Handler = {
         let category = '';
         let itemsInCategory = [];
         let itemName = "";
+        //checks to see if a slot exists for being over or under a certain price
         if (handlerInput.requestEnvelope.request.intent.slots.overUnder === undefined) {
             say = 'overUnder not identified';
         } else {
             overUnder = handlerInput.requestEnvelope.request.intent.slots.overUnder.value;
         }
-        
+        //checks if the price exists, or is invalid
         if (handlerInput.requestEnvelope.request.intent.slots.price === undefined) {
             say = 'price not identified';
         } else {
             price = handlerInput.requestEnvelope.request.intent.slots.price.value.substring(1);
         }
-        
+        //parse out the price
         price = parseFloat(price);
         //if the user specified a category
-        if(handlerInput.requestEnvelope.request.intent.slots.category.value !== undefined){
-            for(var i in dinnerMenu) {
-                if(dinnerMenu[i].category.toLowerCase() ==handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()){
+        if (handlerInput.requestEnvelope.request.intent.slots.category.value !== undefined) {
+            for (var i in dinnerMenu) {
+                if (dinnerMenu[i].category.toLowerCase() == handlerInput.requestEnvelope.request.intent.slots.category.value.toLowerCase()) {
                     itemsInCategory.push(dinnerMenu[i]);
                 }
-            }   
-            
-            if(overUnder.toLowerCase() === "under"){
-                for(var i in itemsInCategory){
-                        if(itemsInCategory[i].price <= price){
-                            itemName = itemsInCategory[i].name.replace("&","and");
-                            itemName = itemName.replace("-"," ");
-                            say+=itemName + ", ";  
-                        }
+            }
+            //if the user wants under, add everything <
+            if (overUnder.toLowerCase() === "under") {
+                for (var i in itemsInCategory) {
+                    if (itemsInCategory[i].price <= price) {
+                        itemName = itemsInCategory[i].name;
+                        say += itemName + ", ";
+                    }
                 }
             }
-            if(overUnder.toLowerCase() === "over"){
-                for(var i in itemsInCategory){
-                        if(itemsInCategory[i].price >= price){
-                            itemName = itemsInCategory[i].name.replace("&","and");
-                            itemName = itemName.replace("-"," ");
-                            say+=itemName + ", ";  
-                        }
+            //if the user wants over, add everything >
+            if (overUnder.toLowerCase() === "over") {
+                for (var i in itemsInCategory) {
+                    if (itemsInCategory[i].price >= price) {
+                        itemName = itemsInCategory[i].name;
+                        say += itemName + ", ";
+                    }
                 }
             }
         }
         //otherwise the user didn't specify a category
-        else{
-            if(overUnder.toLowerCase() === "under"){
-                for(var i in dinnerMenu){
-                        if(dinnerMenu[i].price <= price){
-                            itemName = dinnerMenu[i].name.replace("&","and");
-                            itemName = itemName.replace("-"," ");
-                            say+=itemName + ", ";  
-                        }
+        else {
+            //if the user wants under, add everything <
+            if (overUnder.toLowerCase() === "under") {
+                for (var i in dinnerMenu) {
+                    if (dinnerMenu[i].price <= price) {
+                        itemName = dinnerMenu[i].name;
+                        say += itemName + ", ";
+                    }
                 }
             }
-        
-        
-            if(overUnder.toLowerCase() === "over"){
-                for(var i in dinnerMenu){
-                        if(dinnerMenu[i].price >= price){
-                            itemName = dinnerMenu[i].name.replace("&","and");
-                            itemName = itemName.replace("-"," ");
-                            say+=itemName + ", ";  
-                        }
+
+            //if the user wants over, add everything >
+            if (overUnder.toLowerCase() === "over") {
+                for (var i in dinnerMenu) {
+                    if (dinnerMenu[i].price >= price) {
+                        itemName = dinnerMenu[i].name;
+                        say += itemName + ", ";
+                    }
                 }
             }
-            
-        }
-        if(say == '') {
-            say = "There's nothing "+overUnder.toString()+ " "+price.toString();
 
         }
-        
+        //if we didn't find anything over or under the price
+        if (say == '') {
+            say = "There's nothing " + overUnder.toString() + " " + price.toString();
+
+        }
+
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     }
 };
 
 
 //written by Amazon default.
-const AMAZON_FallbackIntent_Handler =  {
+const AMAZON_FallbackIntent_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.FallbackIntent' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.FallbackIntent';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -405,10 +419,10 @@ const AMAZON_FallbackIntent_Handler =  {
 };
 
 //written by Amazon default.
-const AMAZON_CancelIntent_Handler =  {
+const AMAZON_CancelIntent_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.CancelIntent' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.CancelIntent';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -425,10 +439,10 @@ const AMAZON_CancelIntent_Handler =  {
 };
 
 //written by Amazon default.
-const AMAZON_HelpIntent_Handler =  {
+const AMAZON_HelpIntent_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.HelpIntent' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -438,22 +452,22 @@ const AMAZON_HelpIntent_Handler =  {
         let intents = getCustomIntents();
         let sampleIntent = randomElement(intents);
 
-        let say = ' '; 
+        let say = ' ';
 
         say += ' Here something you can ask me: read menu, get the price or description an item, add something to your order, get the price of your order, filter items by price or allergen, and clear or place your order ';
 
         return responseBuilder
-            .speak(cleanString(say))
+            .speak(say)
             .reprompt('try again, ' + say)
             .getResponse();
     },
 };
 
 //written by Amazon default.
-const AMAZON_StopIntent_Handler =  {
+const AMAZON_StopIntent_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.StopIntent' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.StopIntent';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -464,16 +478,16 @@ const AMAZON_StopIntent_Handler =  {
         let say = 'Okay! What can I do for you?';
 
         return responseBuilder
-            .speak(cleanString(say))
+            .speak(say)
             .getResponse();
     },
 };
 
 //written by Amazon default.
-const AMAZON_NavigateHomeIntent_Handler =  {
+const AMAZON_NavigateHomeIntent_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NavigateHomeIntent' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NavigateHomeIntent';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -484,7 +498,7 @@ const AMAZON_NavigateHomeIntent_Handler =  {
 
 
         return responseBuilder
-            .speak(cleanString(say))
+            .speak(say)
             .reprompt('try again, ' + say)
             .getResponse();
     },
@@ -493,74 +507,94 @@ const AMAZON_NavigateHomeIntent_Handler =  {
 //ReadMenu_Handler: will read back the items in a category or entire menu.
 //Author: Alexa Development team.
 const ReadMenu_Handler = {
-  canHandle(handlerInput) {
-    const request = handlerInput.requestEnvelope.request;
-    return request.type === 'IntentRequest' && request.intent.name === 'ReadMenu';
-  },
-  async handle(handlerInput) {
-    const request = handlerInput.requestEnvelope.request;
-    const responseBuilder = handlerInput.responseBuilder;
-    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+    canHandle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        return request.type === 'IntentRequest' && request.intent.name === 'ReadMenu';
+    },
+    async handle(handlerInput) {
+        const request = handlerInput.requestEnvelope.request;
+        const responseBuilder = handlerInput.responseBuilder;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
 
-    let slotStatus = '';
-    let resolvedSlot;
+        let slotStatus = '';
+        let resolvedSlot;
 
-    let slotValues = getSlotValues(request.intent.slots);
+        let slotValues = getSlotValues(request.intent.slots);
 
-    var catString = await ListOfCategories();
-    var say = '';
+        var catString = await listOfCategories();
+        var say = '';
 
-    say = "Here are the categories on the menu: "+ catString + ". Try requesting a certain category to be read.";
+        say = "Here are the categories on the menu: " + catString + ". Try requesting a certain category to be read.";
 
 
-    // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
+        // getSlotValues returns .heardAs, .resolved, and .isValidated for each slot, according to request slot status codes ER_SUCCESS_MATCH, ER_SUCCESS_NO_MATCH, or traditional simple request slot without resolutions
 
-    //   SLOT: category 
-    if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
-    var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.resolved.toLowerCase()).map(item => item.name).join(", ");
-        say = "Here are the " + slotValues.category.resolved + " I found: " + elseMenu;
-    };
+        //   SLOT: category 
+        if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
 
-    //This never gets triggered because she just doesn't recognize a category
-    if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-      //WILL HAVE TO SEE IF WE CAN EVEN FIND A MATCH ON THE MENU OF THE CATEGORY
-      var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.heardAs.toLowerCase()).map(item => item.name).join(", ");
-      if (elseMenu.length > 0) {
-        say = "Here are the " + slotValues.category.heardAs + " I found: " + elseMenu
-      } else {
-        say = "I found no " + slotValues.category.heardAs + " items";
-      }
-    };
+            let foundItems = [];
 
-    return responseBuilder
-      .speak(cleanString(say))
-      .reprompt(cleanString(say))
-      .getResponse()
-  }
+            //loop through the menu searching for items in the specified category
+            for (var i = 0; i < dinnerMenu.length; i++) {
+                let item = dinnerMenu[i].name.toString();
+                if (foundItems.includes(item) == false && dinnerMenu[i].category.toLowerCase() === slotValues.category.resolved.toLowerCase()) {
+                    foundItems.push(item);
+                }
+            }
+            if (foundItems.length > 0) {
+                say = "Here are the " + slotValues.category.heardAs + " I found: " + foundItems.join(', ').trim();
+            }
+            else {
+                say = "I found no " + slotValues.category.heardAs + " items";
+            }
+        };
+
+        if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
+
+            let foundItems = [];
+
+            //loop through the menu searching for items in the specified category
+            for (var i = 0; i < dinnerMenu.length; i++) {
+                let item = dinnerMenu[i].name.toString();
+                if (foundItems.includes(item) == false && dinnerMenu[i].category.toLowerCase() === slotValues.category.heardAs.toLowerCase()) {
+                    foundItems.push(item);
+                }
+            }
+            if (foundItems.length > 0) {
+                say = "Here are the " + slotValues.category.heardAs + " I found: " + foundItems.join(', ').trim();
+            }
+            else {
+                say = "I found no " + slotValues.category.heardAs + " items";
+            }
+        };
+
+        return responseBuilder
+            .speak(say)
+            .reprompt(say)
+            .getResponse()
+    }
 };
 
 
 //Pricing_Handler: Gets the price of a slotValue.
 //Author: Jack,Max.
-const Pricing_Handler =  {
+const Pricing_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'Pricing' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'Pricing';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-        let slotValues = getSlotValues(request.intent.slots); 
+
+        let slotValues = getSlotValues(request.intent.slots);
         let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
-
-
-            say = "$"+GetPrice(FindItem(slotValues.item.heardAs));
+        say = "$" + getPrice(findItem(slotValues.item.heardAs));
 
 
         if (slotValues.category.ERstatus === 'ER_SUCCESS_MATCH') {
@@ -570,46 +604,41 @@ const Pricing_Handler =  {
         }
         if (slotValues.category.ERstatus === 'ER_SUCCESS_NO_MATCH') {
             var elseMenu = dinnerMenu.filter(item => item.category.toLowerCase() === slotValues.category.heardAs).map(item => {
-                    return item.name + " is $" + item.price;
-                }).join(", ");
+                return item.name + " is $" + item.price;
+            }).join(", ");
             say = elseMenu.length > 0 ? elseMenu : "I found no " + slotValues.category.heardAs + " items";
         }
 
-        //still just for testing if unwanted scripts run
-        say += slotStatus;
-
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 //GetDescription_Handler: Gets the price of an item.
 //Author: Jack,Max.
-const GetDescription_Handler =  {
+const GetDescription_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'GetDescription' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'GetDescription';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-        let slotValues = getSlotValues(request.intent.slots); 
+
+        let slotValues = getSlotValues(request.intent.slots);
         let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
-
-
-            say = GetDescription(FindItem(slotValues.item.heardAs));
-
+        //calls the getDescription function with the item that was said
+        say = getDescription(findItem(slotValues.item.heardAs));
 
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
@@ -617,148 +646,128 @@ const GetDescription_Handler =  {
 
 //BuildOrder_Handler: builds up an order to send to the chef.
 //Author: Zack, Max.
-const BuildOrder_Handler =  {
+const BuildOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'BuildOrder' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'BuildOrder';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-        let slotValues = getSlotValues(request.intent.slots); 
-        //fromIntent = request.intent.name;
-        let say = 'Please finish your item addition request with: to my order';
 
+        let slotValues = getSlotValues(request.intent.slots);
+        let say = 'Please finish your item addition request with: to my order';
         let slotStatus = '';
         let resolvedSlot;
 
-
+        //if we get a success match, call findItem with the item stated, and ask for modifications
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
-            currentItem = FindItem(slotValues.item.resolved);
+            currentItem = findItem(slotValues.item.resolved);
             currentItem.mod = "";
             say = "Would you like to add any modifications to " + currentItem.name + "?"
         }
-        
+        //if we don't get a success match, check if the heardas is valid, then call findItem with the item stated, and ask for modifications        
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            if(FindItem(slotValues.item.heardAs)!=undefined){
-                currentItem = FindItem(slotValues.item.heardAs);
+            if (findItem(slotValues.item.heardAs) != undefined) {
+                currentItem = findItem(slotValues.item.heardAs);
                 currentItem.mod = "";
                 say = "Would you like to add any modifications to " + currentItem.name + "?"
 
             }
-            else{
-                say = "I could not find "+slotValues.item.heardAs+ " on the menu."
+            else {
+                say = "I could not find " + slotValues.item.heardAs + " on the menu."
             }
         }
 
-        //still just for testing if unwanted scripts run
-
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 //ModifyItem_Handler: Adds a modification to the items in an order.
 //Author: Max
-const ModifyItem_Handler =  {
+const ModifyItem_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'ModifyItem' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'ModifyItem';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-        let slotValues = getSlotValues(request.intent.slots); 
+
+        let slotValues = getSlotValues(request.intent.slots);
         let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
-        
 
-                    if (currentItem.mod === undefined || currentItem.mod === ""){
-                        currentItem.mod = slotValues.mod.heardAs;
-                    }
-                    else{
-                        currentItem.mod += " and "+slotValues.mod.heardAs;
-                    }
-                    //AddToOrder(currentItem);
-                    say = "You added " +slotValues.mod.heardAs+ " to " + currentItem.name + ". Would you like to make any additional modifications?";
-                    
+
+        if (currentItem.mod === undefined || currentItem.mod === "") {
+            currentItem.mod = slotValues.mod.heardAs;
+        }
+        else {
+            currentItem.mod += " and " + slotValues.mod.heardAs;
+        }
+        say = "You added " + slotValues.mod.heardAs + " to " + currentItem.name + ". Would you like to make any additional modifications?";
+
 
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 
-//PlaceOrder_Handler:Places an order to the chef.
-//Author:Alexa Development team.
-const PlaceOrder_Handler =  {
+//PlaceOrder_Handler: Reads off current order and asks for confirmation.
+//Author: Max
+const PlaceOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'PlaceOrder' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'PlaceOrder';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
-        //build up the ticket object that would then be sent to the kitchen if the yes intent is invoked
-        //then send it to the kitchen under the yes intent
-        
-        //let ids = "";
-        
-        //capitalized to 
-        let orderItems = [];
-        if(currentOrder.length !== 0){
-            for(var i =0; i < currentOrder.length; i++){
-                orderItems[i] = {
-                    "menuItemID": currentOrder[i].itemID,
-                    "notes": currentOrder[i].mod
-                }
-            }            
-        }
-        //orderItems will then be added to the ticket that we send off with the table number, restaurant id ...
-        let say = "Your order consists of " + ReadCurrentOrder() + " . Are you ready to send your order to the kitchen?";
-        
-        
+        let say = "Your order consists of " + readCurrentOrder() + " . Are you ready to send your order to the kitchen?";
+
+
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
+
 //PriceOfOrder_Handler:iterates through the current order and gives the total price.
 //Author:Jack,Max.
-const PriceOfOrder_Handler =  {
+const PriceOfOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'PriceOfOrder' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'PriceOfOrder';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
+
         let currentPrice = 0;
         currentOrder.forEach(item => {
             currentPrice += item.price;
         });
 
-        let say = "The current price of your order is $" + currentPrice;
+        let say = "The current price of your order is $" + currentPrice.toFixed(2);
 
 
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
@@ -768,25 +777,25 @@ const PriceOfOrder_Handler =  {
 const ReadCurrentOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'ReadCurrentOrder' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'ReadCurrentOrder';
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
-        let say = ReadCurrentOrder();
+        let say = readCurrentOrder();
 
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
-// RestaurantRegistration_Handler: Ellicit the restuarant id for registration
+//RestaurantRegistration_Handler: Ellicit the restuarant id for registration
 //Author: Ben
-const RestaurantRegistration_Handler =  {
+const RestaurantRegistration_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'RestaurantRegistration';
@@ -795,34 +804,35 @@ const RestaurantRegistration_Handler =  {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-        let slotValues = getSlotValues(request.intent.slots); 
+
+        let slotValues = getSlotValues(request.intent.slots);
         let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
 
         restaurantID = slotValues.restaurantID.heardAs;
-        if(restaurantID == undefined || isNaN(restaurantID) || parseInt(restaurantID) <= 0) {
+        if (restaurantID == undefined || isNaN(restaurantID) || parseInt(restaurantID) <= 0) {
             say = "The restaurant I.D. you used is invalid. Please relaunch Auto Garcon and try a different restaurant I.D.";
             return responseBuilder
-                .speak(cleanString(say))
+                .speak(say)
                 .withShouldEndSession(true)
                 .getResponse();
         }
-        
-        await fetch_restaurant_name(restaurantID).then(result =>{
-            restaurantName = result.restaurantName;})
-            
+
+        await fetchRestaurantName(restaurantID).then(result => {
+            restaurantName = result.restaurantName;
+        })
+
         // this checks if the restaurant exists
-        if(restaurantName == null || restaurantName == undefined) {
+        if (restaurantName == null || restaurantName == undefined) {
             return responseBuilder
-                .speak(cleanString("The restaurant I.D. you used is invalid. Please relaunch Auto Garcon and try a different restaurant I.D."))
+                .speak("The restaurant I.D. you used is invalid. Please relaunch Auto Garcon and try a different restaurant I.D.")
                 .withShouldEndSession(true)
                 .getResponse();
         }
-        
-        say = "You said restaurant " + restaurantID +". What table number would you like to register to?";
+
+        say = "You said restaurant " + restaurantID + ". What table number would you like to register to?";
 
         return responseBuilder
             .addElicitSlotDirective('tableNumber', {
@@ -830,15 +840,15 @@ const RestaurantRegistration_Handler =  {
                 confirmationStatus: 'NONE',
                 slots: {}
             })
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 // TableRegistration_Handler: Ellicit the table number for registration
 //Author: Ben
-const TableRegistration_Handler =  {
+const TableRegistration_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'IntentRequest' && request.intent.name === 'TableRegistration';
@@ -847,50 +857,48 @@ const TableRegistration_Handler =  {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-        let slotValues = getSlotValues(request.intent.slots); 
+
+        let slotValues = getSlotValues(request.intent.slots);
         let say = '';
 
         let slotStatus = '';
         let resolvedSlot;
-        
+
         tableNum = slotValues.tableNumber.heardAs;
-        if(tableNum == undefined || isNaN(tableNum) || parseInt(tableNum) <= 0) {
+        if (tableNum == undefined || isNaN(tableNum) || parseInt(tableNum) <= 0) {
 
             return responseBuilder
                 .speak("The table number you used is invalid. Please relaunch Auto Garcon and try a different table number.")
                 .withShouldEndSession(true)
                 .getResponse();
         }
-        
-        var numberOfTables = 0;
+
         var found = false;
 
-        await fetch_tables(restaurantID).then(result =>{
-            numberOfTables = result.numTables;
-            for(let i = 0 ; i <result.tables.length; i++){
-                if(result.tables[i].tableNumber == parseInt(tableNum)){
+        await fetchTables(restaurantID).then(result => {
+            for (let i = 0; i < result.tables.length; i++) {
+                if (result.tables[i].tableNumber == parseInt(tableNum)) {
                     found = true;
                 }
             }
         })
 
-        if(found == false){
+        if (found == false) {
             return responseBuilder
                 .speak("The table number you used is invalid. Please relaunch Auto Garcon and try a different table number.")
                 .withShouldEndSession(true)
-                .getResponse();    
+                .getResponse();
         }
 
         say = "Registering to " + restaurantName + " table number " + tableNum + ". Please relaunch Auto Garcon.";
 
         // register these to the database
-        var registerEndpoint = "/api/restaurant/"+restaurantID+"/tables/"+tableNum+"/register"
-        await httpsPost(registerEndpoint,{"alexaID":alexaID});
+        var registerEndpoint = "/api/restaurant/" + restaurantID + "/tables/" + tableNum + "/register"
+        await httpsPost(registerEndpoint, { "alexaID": alexaID });
 
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .withShouldEndSession(true)
             .getResponse();
     },
@@ -901,44 +909,43 @@ const TableRegistration_Handler =  {
 const ClearOrder_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'ClearOrder' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'ClearOrder';
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        let say='';
+        let say = '';
         if (request.intent.confirmationStatus !== "DENIED") {
             currentOrder = [];
             say = "Successfully cleared your order";
-            var customer = {"customerID":customerID};
-            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
-            await httpsPost(newOrderPath,customer);
-        }else{
+            var customer = { "customerID": customerID };
+            var newOrderPath = '/api/restaurant/' + restaurantID + '/tables/' + tableNum + '/order/new';
+            await httpsPost(newOrderPath, customer);
+        } else {
             say = "Your order is still intact. What else can I do for you?"
         }
 
-
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 //RemoveItem_Handler:Removes an item from the current order.
 //Author:Jack, Max.
-const RemoveItem_Handler =  {
+const RemoveItem_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'RemoveItem' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'RemoveItem';
     },
     handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         const responseBuilder = handlerInput.responseBuilder;
         let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-        let slotValues = getSlotValues(request.intent.slots); 
+
+        let slotValues = getSlotValues(request.intent.slots);
         let say = '';
 
         let slotStatus = '';
@@ -947,54 +954,54 @@ const RemoveItem_Handler =  {
 
         if (slotValues.item.ERstatus === 'ER_SUCCESS_MATCH') {
 
-            if (RemoveFromOrder(FindItem(slotValues.item.resolved))) {
-                say = "successfully removed " +slotValues.item.heardAs +" from order";
+            if (removeFromOrder(findItem(slotValues.item.resolved))) {
+                say = "successfully removed " + slotValues.item.heardAs + " from order";
             } else {
-                say = "I could not find " + slotValues.item.heardAs +" in your order";
+                say = "I could not find " + slotValues.item.heardAs + " in your order";
             }
         }
         if (slotValues.item.ERstatus === 'ER_SUCCESS_NO_MATCH') {
-            //RemoveFromOrder(FindItem(slotValues.item.heardAs));
-            if (RemoveFromOrder(FindItem(slotValues.item.heardAs))) {
-                say = "successfully removed " +slotValues.item.heardAs +" from order";
+            //removeFromOrder(findItem(slotValues.item.heardAs));
+            if (removeFromOrder(findItem(slotValues.item.heardAs))) {
+                say = "successfully removed " + slotValues.item.heardAs + " from order";
             } else {
-                say = "I could not find " + slotValues.item.heardAs +" in your order";
+                say = "I could not find " + slotValues.item.heardAs + " in your order";
             }
             //slotStatus += 'which did not match any slot value. ';
-            console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! '); 
+            console.log('***** consider adding "' + slotValues.item.heardAs + '" to the custom slot type used by slot item! ');
         }
-        
-        
+
+
 
         say += slotStatus;
 
 
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 // LaunchRequest_Handler: fetches data and begins user interaction
 //written by Amazon default and Ben
-const LaunchRequest_Handler =  {
+const LaunchRequest_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'LaunchRequest';
     },
     async handle(handlerInput) {
-        
+
         const responseBuilder = handlerInput.responseBuilder;
         let say = '';
-        
+
         // get alexa id
-        alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();
-        alexaID = "96";
+        //alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();
+        alexaID = "48";
 
         var isRegistered = true;
         // get restaurant id
-        await fetch_restaurant(alexaID).then(async result => {
+        await fetchRestaurant(alexaID).then(async result => {
             if (result.restaurantID != null) {
                 // get resturantID and table number
                 // the device is registered
@@ -1002,29 +1009,29 @@ const LaunchRequest_Handler =  {
                 tableNum = result.tableNumber;
                 // clear the local order
                 currentOrder = [];
-                if(result.currentOrder == null || result.currentOrder == undefined){
+                if (result.currentOrder == null || result.currentOrder == undefined) {
                     say = "Please scan the Q.R. code and try again.";
                     return responseBuilder
-                        .speak(cleanString(say))
-                        .reprompt(cleanString(say))
+                        .speak(say)
+                        .reprompt(say)
                         .withShouldEndSession(true)
                         .getResponse();
                 }
                 customerID = result.currentOrder.customerID;
-                // // get the restaurant name
-                await fetch_restaurant_name(restaurantID).then(result =>{
-                  restaurantName = result.restaurantName; 
+                // get the restaurant name
+                await fetchRestaurantName(restaurantID).then(result => {
+                    restaurantName = result.restaurantName;
                 });
-                
+
                 say = 'Hello and welcome to ' + restaurantName + '!';
-                
+
                 if (result.currentOrder.orderItems.length > 0) {
                     // there is an old order
                     // populate the current order; match object information
-                    for(let i = 0; i < result.currentOrder.orderItems.length ;++i){
+                    for (let i = 0; i < result.currentOrder.orderItems.length; ++i) {
                         currentOrder.push(result.currentOrder.orderItems[i]);
                     }
-                    
+
                     say += ' There is an unfinished order. Would you like to resume this order?';
                 }
                 else {
@@ -1036,7 +1043,7 @@ const LaunchRequest_Handler =  {
             }
         });
 
-        if(isRegistered == false) {
+        if (isRegistered == false) {
             // the device is not registered
             return responseBuilder
                 .addElicitSlotDirective('restaurantID', {
@@ -1048,17 +1055,18 @@ const LaunchRequest_Handler =  {
                 .reprompt('I did not catch that. What restaurant I.D. would you like to register it to?')
                 .getResponse()
         }
-        
+
         // get data
-        await fetch_data(restaurantID).then(result => {
+        await fetchData(restaurantID).then(result => {
             for (var i = 0; i < result.length; i++) {
                 for (var j = 0; j < result[i].menuItems.length; j++) {
-                    dinnerMenu.push(result[i].menuItems[j]);
-                    
-                    for(var k = 0; k < currentOrder.length; ++k){
-                        if(result[i].menuItems[j].menuID == currentOrder[k].menuID && result[i].menuItems[j].itemID == currentOrder[k].menuItemID) {
+                    if (!dinnerMenu.includes(result[i].menuItems[j])) {
+                        dinnerMenu.push(result[i].menuItems[j]);
+                    }
+                    for (var k = 0; k < currentOrder.length; ++k) {
+                        if (result[i].menuItems[j].menuID == currentOrder[k].menuID && result[i].menuItems[j].itemID == currentOrder[k].menuItemID) {
                             let comments = "";
-                            if(currentOrder[k].comments != "Default OrderItem" && currentOrder[k].comments != "") {
+                            if (currentOrder[k].comments != "Default OrderItem" && currentOrder[k].comments != "") {
                                 comments = currentOrder[k].comments;
                             }
                             currentOrder[k] = JSON.parse(JSON.stringify(result[i].menuItems[j]));
@@ -1068,16 +1076,16 @@ const LaunchRequest_Handler =  {
                 };
             };
         });
-        
+
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     }
 };
 
 //written by Amazon default
-const SessionEndedHandler =  {
+const SessionEndedHandler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
         return request.type === 'SessionEndedRequest';
@@ -1089,7 +1097,7 @@ const SessionEndedHandler =  {
 };
 
 //written by Amazon default.
-const ErrorHandler =  {
+const ErrorHandler = {
     canHandle() {
         return true;
     },
@@ -1107,10 +1115,10 @@ const ErrorHandler =  {
 
 //AMAZON_YesIntent_Handler:Gets "yes" responses and redirects from what was the previous intent
 //Author: Max
-const AMAZON_YesIntent_Handler =  {
+const AMAZON_YesIntent_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.YesIntent' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.YesIntent';
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -1119,76 +1127,84 @@ const AMAZON_YesIntent_Handler =  {
 
         let say = 'You said Yes. ';
         let previousIntent = getPreviousIntent(sessionAttributes);
-        say +=previousIntent
-        if (previousIntent=="BuildOrder" && !handlerInput.requestEnvelope.session.new) {
+        say += previousIntent
+
+        //direct to ModifyItem to get the modification
+        if (previousIntent == "BuildOrder" && !handlerInput.requestEnvelope.session.new) {
             say = 'What modifications would you like to make? ';
             return responseBuilder
                 .addElicitSlotDirective('mod', {
                     name: 'ModifyItem',
                     confirmationStatus: 'NONE'
                 })
-                .speak(cleanString(say))
-                .reprompt(cleanString(say))
+                .speak(say)
+                .reprompt(say)
                 .getResponse();
         }
-        if (previousIntent=="ModifyItem" && !handlerInput.requestEnvelope.session.new) {
+
+        //loop back to ModifyItem to get the additional modification
+        if (previousIntent == "ModifyItem" && !handlerInput.requestEnvelope.session.new) {
             say = 'What other modifications would you like to make? ';
             return responseBuilder
                 .addElicitSlotDirective('mod', {
                     name: 'ModifyItem',
                     confirmationStatus: 'NONE'
                 })
-                .speak(cleanString(say))
-                .reprompt(cleanString(say))
+                .speak(say)
+                .reprompt(say)
                 .getResponse();
         }
-        if (previousIntent=="AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
+
+        //no additional modification so direct to place order
+        if (previousIntent == "AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
             say = ' ';
             return responseBuilder
                 .addDelegateDirective({
                     name: 'PlaceOrder',
                     confirmationStatus: 'NONE'
                 })
-                .speak(cleanString(say))
-                .reprompt(cleanString(say))
+                .speak(say)
+                .reprompt(say)
                 .getResponse();
         }
-        if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
+
+        if (previousIntent == "PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
             // send the order
-            var submitOrderPath = '/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/submit';
+            var submitOrderPath = '/api/restaurant/' + restaurantID + '/tables/' + tableNum + '/order/submit';
             await httpsGet(submitOrderPath);
             say = 'Order confirmed and sent to kitchen.';
             // clear the order
             currentOrder = [];
-            
+
             return responseBuilder
-                .speak(cleanString(say + " Thank you for your order. Scan the Q.R. code to start a new order."))
-                .reprompt(cleanString(say))
+                .speak(say + " Thank you for your order. Scan the Q.R. code to start a new order.")
+                .reprompt(say)
                 .withShouldEndSession(true)
                 .getResponse();
         }
 
-        if (previousIntent=="LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
+        //continue with previous order
+        if (previousIntent == "LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
             say = "Ok. Lets resume your order.";
             return responseBuilder
-                .speak(cleanString(say))
-                .reprompt(cleanString(say))
+                .speak(say)
+                .reprompt(say)
                 .getResponse();
         }
 
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 //AMAZON_NoIntent_Handler:Gets "no" responses and redirects from what was the previous intent
 //Author: Max
-const AMAZON_NoIntent_Handler =  {
+const AMAZON_NoIntent_Handler = {
     canHandle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
-        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NoIntent' ;
+        return request.type === 'IntentRequest' && request.intent.name === 'AMAZON.NoIntent';
     },
     async handle(handlerInput) {
         const request = handlerInput.requestEnvelope.request;
@@ -1197,50 +1213,56 @@ const AMAZON_NoIntent_Handler =  {
 
         let say = 'You said No. ';
         let previousIntent = getPreviousIntent(sessionAttributes);
-        
-        if (previousIntent=="BuildOrder" && !handlerInput.requestEnvelope.session.new) {
-            // say += 'Your last intent was ' + previousIntent + '. ';
-            AddToOrder(currentItem);
-            say = "Okay. Successfully added " +currentItem.name +" to order.";
+
+        //no modification, add the item to the order
+        if (previousIntent == "BuildOrder" && !handlerInput.requestEnvelope.session.new) {
+            addToOrder(currentItem);
+            say = "Okay. Successfully added " + currentItem.name + " to order.";
             say += " Are you ready to place your order?";
 
         }
-        if (previousIntent=="ModifyItem" && !handlerInput.requestEnvelope.session.new) {
-            // say += 'Your last intent was ' + previousIntent + '. ';
-            AddToOrder(currentItem);
-            say = "Okay. Successfully added " +currentItem.name + " with " + currentItem.mod + " to order."
+
+        //no more modification, add teh item to the order
+        if (previousIntent == "ModifyItem" && !handlerInput.requestEnvelope.session.new) {
+            addToOrder(currentItem);
+            say = "Okay. Successfully added " + currentItem.name + " with " + currentItem.mod + " to order."
             say += " Are you ready to place your order?";
         }
-        if (previousIntent=="AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
+
+        //customer not ready to place order yet
+        if (previousIntent == "AMAZON.NoIntent" && !handlerInput.requestEnvelope.session.new) {
             say = 'Okay. What else can I do for you?';
         }
-        if (previousIntent=="PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
+
+        //customer does not want to confirm their order placement
+        if (previousIntent == "PlaceOrder" && !handlerInput.requestEnvelope.session.new) {
             // say += 'Your last intent was ' + previousIntent + '. ';
             say = "Okay. Feel free to continue modifying your order. Just say Place Order when you're ready to send it to the kitchen."
         }
-        
-        if (previousIntent=="LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
+
+        //customer does not want to continue previous order
+        if (previousIntent == "LaunchRequest" && !handlerInput.requestEnvelope.session.new) {
             say = "Ok. Lets start a new order";
             currentOrder = [];
             // update the db
-            var customer = {"customerID":customerID};
-            var newOrderPath='/api/restaurant/'+restaurantID+'/tables/'+tableNum+'/order/new';
-            await httpsPost(newOrderPath,customer);
+            var customer = { "customerID": customerID };
+            var newOrderPath = '/api/restaurant/' + restaurantID + '/tables/' + tableNum + '/order/new';
+            await httpsPost(newOrderPath, customer);
         }
-        
+
         return responseBuilder
-            .speak(cleanString(say))
-            .reprompt(cleanString(say))
+            .speak(say)
+            .reprompt(say)
             .getResponse();
     },
 };
 
 // 2. Constants ===========================================================================
 
-    // Here you can define static data, to be used elsewhere in your code.  For example: 
-    //    const myString = "Hello World";
-    //    const myArray  = [ "orange", "grape", "strawberry" ];
-    //    const myObject = { "city": "Boston",  "state":"Massachusetts" };
+// Here you can define static data, to be used elsewhere in your code.  For example: 
+//    const myString = "Hello World";
+//    const myArray  = [ "orange", "grape", "strawberry" ];
+//    const myObject = { "city": "Boston",  "state":"Massachusetts" };
 
 const APP_ID = undefined;  // TODO replace with your Skill ID (OPTIONAL).
 
@@ -1248,310 +1270,311 @@ const APP_ID = undefined;  // TODO replace with your Skill ID (OPTIONAL).
 //written by Amazon default.
 function capitalize(myString) {
 
-     return myString.replace(/(?:^|\s)\S/g, function(a) { return a.toUpperCase(); }) ;
+    return myString.replace(/(?:^|\s)\S/g, function (a) { return a.toUpperCase(); });
 }
 //written by Amazon default.
-function randomElement(myArray) { 
-    return(myArray[Math.floor(Math.random() * myArray.length)]); 
-} 
- 
- //written by Amazon default.
-function stripSpeak(str) { 
-    return(str.replace('<speak>', '').replace('</speak>', '')); 
-} 
- 
- 
- 
- //written by Amazon default.
-function getSlotValues(filledSlots) { 
-    const slotValues = {}; 
- 
-    Object.keys(filledSlots).forEach((item) => { 
-        const name  = filledSlots[item].name; 
- 
-        if (filledSlots[item] && 
-            filledSlots[item].resolutions && 
-            filledSlots[item].resolutions.resolutionsPerAuthority[0] && 
-            filledSlots[item].resolutions.resolutionsPerAuthority[0].status && 
-            filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) { 
-            switch (filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) { 
-                case 'ER_SUCCESS_MATCH': 
-                    slotValues[name] = { 
-                        heardAs: filledSlots[item].value, 
-                        resolved: filledSlots[item].resolutions.resolutionsPerAuthority[0].values[0].value.name, 
-                        ERstatus: 'ER_SUCCESS_MATCH' 
-                    }; 
-                    break; 
-                case 'ER_SUCCESS_NO_MATCH': 
-                    slotValues[name] = { 
-                        heardAs: filledSlots[item].value, 
-                        resolved: '', 
-                        ERstatus: 'ER_SUCCESS_NO_MATCH' 
-                    }; 
-                    break; 
-                default: 
-                    break; 
-            } 
-        } else { 
-            slotValues[name] = { 
-                heardAs: filledSlots[item].value, 
-                resolved: '', 
-                ERstatus: '' 
-            }; 
-        } 
-    }, this); 
- 
-    return slotValues; 
-} 
- //written by Amazon default.
+function randomElement(myArray) {
+    return (myArray[Math.floor(Math.random() * myArray.length)]);
+}
+
+//written by Amazon default.
+function stripSpeak(str) {
+    return (str.replace('<speak>', '').replace('</speak>', ''));
+}
+
+
+
+//written by Amazon default.
+function getSlotValues(filledSlots) {
+    const slotValues = {};
+
+    Object.keys(filledSlots).forEach((item) => {
+        const name = filledSlots[item].name;
+
+        if (filledSlots[item] &&
+            filledSlots[item].resolutions &&
+            filledSlots[item].resolutions.resolutionsPerAuthority[0] &&
+            filledSlots[item].resolutions.resolutionsPerAuthority[0].status &&
+            filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) {
+            switch (filledSlots[item].resolutions.resolutionsPerAuthority[0].status.code) {
+                case 'ER_SUCCESS_MATCH':
+                    slotValues[name] = {
+                        heardAs: filledSlots[item].value,
+                        resolved: filledSlots[item].resolutions.resolutionsPerAuthority[0].values[0].value.name,
+                        ERstatus: 'ER_SUCCESS_MATCH'
+                    };
+                    break;
+                case 'ER_SUCCESS_NO_MATCH':
+                    slotValues[name] = {
+                        heardAs: filledSlots[item].value,
+                        resolved: '',
+                        ERstatus: 'ER_SUCCESS_NO_MATCH'
+                    };
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            slotValues[name] = {
+                heardAs: filledSlots[item].value,
+                resolved: '',
+                ERstatus: ''
+            };
+        }
+    }, this);
+
+    return slotValues;
+}
+//written by Amazon default.
 function supportsDisplay(handlerInput) // returns true if the skill is running on a device with a display (Echo Show, Echo Spot, etc.) 
 {                                      //  Enable your skill for display as shown here: https://alexa.design/enabledisplay 
-    const hasDisplay = 
-        handlerInput.requestEnvelope.context && 
-        handlerInput.requestEnvelope.context.System && 
-        handlerInput.requestEnvelope.context.System.device && 
-        handlerInput.requestEnvelope.context.System.device.supportedInterfaces && 
-        handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display; 
- 
-    return hasDisplay; 
+    const hasDisplay =
+        handlerInput.requestEnvelope.context &&
+        handlerInput.requestEnvelope.context.System &&
+        handlerInput.requestEnvelope.context.System.device &&
+        handlerInput.requestEnvelope.context.System.device.supportedInterfaces &&
+        handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display;
+
+    return hasDisplay;
 }
- //written by Amazon default.
-function getCustomIntents() { 
-    const modelIntents = model.interactionModel.languageModel.intents; 
- 
-    let customIntents = []; 
- 
- 
-    for (let i = 0; i < modelIntents.length; i++) { 
- 
-        if(modelIntents[i].name.substring(0,7) != "AMAZON." && modelIntents[i].name !== "LaunchRequest" ) { 
-            customIntents.push(modelIntents[i]); 
-        } 
-    } 
-    return customIntents; 
-} 
- //written by Amazon default.
-function getSampleUtterance(intent) { 
- 
-    return randomElement(intent.samples); 
- 
-} 
- //written by Amazon default.
-function getPreviousIntent(attrs) { 
- 
-    if (attrs.history && attrs.history.length > 1) { 
-        return attrs.history[attrs.history.length - 2].IntentRequest; 
- 
-    } else { 
-        return false; 
-    } 
- 
-} 
- //written by Amazon default.
-function getPreviousSpeechOutput(attrs) { 
- 
-    if (attrs.lastSpeechOutput && attrs.history.length > 1) { 
-        return attrs.lastSpeechOutput; 
- 
-    } else { 
-        return false; 
-    } 
- 
-} 
- //written by Amazon default.
-const InitMemoryAttributesInterceptor = { 
-    process(handlerInput) { 
-        let sessionAttributes = {}; 
-        if(handlerInput.requestEnvelope.session['new']) { 
- 
-            sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
- 
-            let memoryAttributes = getMemoryAttributes(); 
- 
-            if(Object.keys(sessionAttributes).length === 0) { 
- 
-                Object.keys(memoryAttributes).forEach(function(key) {  // initialize all attributes from global list 
- 
-                    sessionAttributes[key] = memoryAttributes[key]; 
- 
-                }); 
- 
-            } 
-            handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
- 
- 
-        } 
-    } 
-}; 
- //written by Amazon default.
-const RequestHistoryInterceptor = { 
-    process(handlerInput) { 
- 
-        const thisRequest = handlerInput.requestEnvelope.request; 
-        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
- 
-        let history = sessionAttributes['history'] || []; 
- 
-        let IntentRequest = {}; 
-        if (thisRequest.type === 'IntentRequest' ) { 
- 
-            let slots = []; 
- 
-            IntentRequest = { 
-                'IntentRequest' : thisRequest.intent.name 
-            }; 
- 
-            if (thisRequest.intent.slots) { 
- 
-                for (let slot in thisRequest.intent.slots) { 
-                    let slotObj = {}; 
-                    slotObj[slot] = thisRequest.intent.slots[slot].value; 
-                    slots.push(slotObj); 
-                } 
- 
-                IntentRequest = { 
-                    'IntentRequest' : thisRequest.intent.name, 
-                    'slots' : slots 
-                }; 
- 
-            } 
- 
-        } else { 
-            IntentRequest = {'IntentRequest' : thisRequest.type}; 
-        } 
-        if(history.length > maxHistorySize - 1) { 
-            history.shift(); 
-        } 
-        history.push(IntentRequest); 
- 
-        handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
- 
-    } 
- 
-}; 
- 
- 
- 
- //written by Amazon default.
-const RequestPersistenceInterceptor = { 
-    process(handlerInput) { 
- 
-        if(handlerInput.requestEnvelope.session['new']) { 
- 
-            return new Promise((resolve, reject) => { 
- 
-                handlerInput.attributesManager.getPersistentAttributes() 
- 
-                    .then((sessionAttributes) => { 
-                        sessionAttributes = sessionAttributes || {}; 
- 
- 
-                        sessionAttributes['launchCount'] += 1; 
- 
-                        handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
- 
-                        handlerInput.attributesManager.savePersistentAttributes() 
-                            .then(() => { 
-                                resolve(); 
-                            }) 
-                            .catch((err) => { 
-                                reject(err); 
-                            }); 
-                    }); 
- 
-            }); 
- 
+//written by Amazon default.
+function getCustomIntents() {
+    const modelIntents = model.interactionModel.languageModel.intents;
+
+    let customIntents = [];
+
+
+    for (let i = 0; i < modelIntents.length; i++) {
+
+        if (modelIntents[i].name.substring(0, 7) != "AMAZON." && modelIntents[i].name !== "LaunchRequest") {
+            customIntents.push(modelIntents[i]);
+        }
+    }
+    return customIntents;
+}
+//written by Amazon default.
+function getSampleUtterance(intent) {
+
+    return randomElement(intent.samples);
+
+}
+//written by Amazon default.
+function getPreviousIntent(attrs) {
+
+    if (attrs.history && attrs.history.length > 1) {
+        return attrs.history[attrs.history.length - 2].IntentRequest;
+
+    } else {
+        return false;
+    }
+
+}
+//written by Amazon default.
+function getPreviousSpeechOutput(attrs) {
+
+    if (attrs.lastSpeechOutput && attrs.history.length > 1) {
+        return attrs.lastSpeechOutput;
+
+    } else {
+        return false;
+    }
+
+}
+//written by Amazon default.
+const InitMemoryAttributesInterceptor = {
+    process(handlerInput) {
+        let sessionAttributes = {};
+        if (handlerInput.requestEnvelope.session['new']) {
+
+            sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+            let memoryAttributes = getMemoryAttributes();
+
+            if (Object.keys(sessionAttributes).length === 0) {
+
+                Object.keys(memoryAttributes).forEach(function (key) {  // initialize all attributes from global list 
+
+                    sessionAttributes[key] = memoryAttributes[key];
+
+                });
+
+            }
+            handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+
+
+        }
+    }
+};
+//written by Amazon default.
+const RequestHistoryInterceptor = {
+    process(handlerInput) {
+
+        const thisRequest = handlerInput.requestEnvelope.request;
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+        let history = sessionAttributes['history'] || [];
+
+        let IntentRequest = {};
+        if (thisRequest.type === 'IntentRequest') {
+
+            let slots = [];
+
+            IntentRequest = {
+                'IntentRequest': thisRequest.intent.name
+            };
+
+            if (thisRequest.intent.slots) {
+
+                for (let slot in thisRequest.intent.slots) {
+                    let slotObj = {};
+                    slotObj[slot] = thisRequest.intent.slots[slot].value;
+                    slots.push(slotObj);
+                }
+
+                IntentRequest = {
+                    'IntentRequest': thisRequest.intent.name,
+                    'slots': slots
+                };
+
+            }
+
+        } else {
+            IntentRequest = { 'IntentRequest': thisRequest.type };
+        }
+        if (history.length > maxHistorySize - 1) {
+            history.shift();
+        }
+        history.push(IntentRequest);
+
+        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+
+    }
+
+};
+
+
+
+//written by Amazon default.
+const RequestPersistenceInterceptor = {
+    process(handlerInput) {
+
+        if (handlerInput.requestEnvelope.session['new']) {
+
+            return new Promise((resolve, reject) => {
+
+                handlerInput.attributesManager.getPersistentAttributes()
+
+                    .then((sessionAttributes) => {
+                        sessionAttributes = sessionAttributes || {};
+
+
+                        sessionAttributes['launchCount'] += 1;
+
+                        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+
+                        handlerInput.attributesManager.savePersistentAttributes()
+                            .then(() => {
+                                resolve();
+                            })
+                            .catch((err) => {
+                                reject(err);
+                            });
+                    });
+
+            });
+
         } // end session['new'] 
-    } 
-}; 
- 
- //written by Amazon default.
-const ResponseRecordSpeechOutputInterceptor = { 
-    process(handlerInput, responseOutput) { 
- 
-        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
-        let lastSpeechOutput = { 
-            "outputSpeech":responseOutput.outputSpeech.ssml, 
-            "reprompt":responseOutput.reprompt.outputSpeech.ssml 
-        }; 
- 
-        sessionAttributes['lastSpeechOutput'] = lastSpeechOutput; 
- 
-        handlerInput.attributesManager.setSessionAttributes(sessionAttributes); 
- 
-    } 
-}; 
- //written by Amazon default.
-const ResponsePersistenceInterceptor = { 
-    process(handlerInput, responseOutput) { 
- 
-        const ses = (typeof responseOutput.shouldEndSession == "undefined" ? true : responseOutput.shouldEndSession); 
- 
-        if(ses || handlerInput.requestEnvelope.request.type == 'SessionEndedRequest') { // skill was stopped or timed out 
- 
-            let sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); 
- 
-            sessionAttributes['lastUseTimestamp'] = new Date(handlerInput.requestEnvelope.request.timestamp).getTime(); 
- 
-            handlerInput.attributesManager.setPersistentAttributes(sessionAttributes); 
- 
-            return new Promise((resolve, reject) => { 
-                handlerInput.attributesManager.savePersistentAttributes() 
-                    .then(() => { 
-                        resolve(); 
-                    }) 
-                    .catch((err) => { 
-                        reject(err); 
-                    }); 
- 
-            }); 
- 
-        } 
- 
-    } 
-}; 
- 
- 
- 
+    }
+};
+
+//written by Amazon default.
+const ResponseRecordSpeechOutputInterceptor = {
+    process(handlerInput, responseOutput) {
+
+        let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+        let lastSpeechOutput = {
+            "outputSpeech": responseOutput.outputSpeech.ssml,
+            "reprompt": responseOutput.reprompt.outputSpeech.ssml
+        };
+
+        sessionAttributes['lastSpeechOutput'] = lastSpeechOutput;
+
+        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+
+    }
+};
+//written by Amazon default.
+const ResponsePersistenceInterceptor = {
+    process(handlerInput, responseOutput) {
+
+        const ses = (typeof responseOutput.shouldEndSession == "undefined" ? true : responseOutput.shouldEndSession);
+
+        if (ses || handlerInput.requestEnvelope.request.type == 'SessionEndedRequest') { // skill was stopped or timed out 
+
+            let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+
+            sessionAttributes['lastUseTimestamp'] = new Date(handlerInput.requestEnvelope.request.timestamp).getTime();
+
+            handlerInput.attributesManager.setPersistentAttributes(sessionAttributes);
+
+            return new Promise((resolve, reject) => {
+                handlerInput.attributesManager.savePersistentAttributes()
+                    .then(() => {
+                        resolve();
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+
+            });
+
+        }
+
+    }
+};
+
+
+
 // 4. Exports handler function and setup ===================================================
 const skillBuilder = Alexa.SkillBuilders.custom();
 exports.handler = skillBuilder
     .addRequestHandlers(
-        AMAZON_FallbackIntent_Handler, 
-        AMAZON_CancelIntent_Handler, 
-        AMAZON_HelpIntent_Handler, 
-        AMAZON_StopIntent_Handler, 
-        AMAZON_NavigateHomeIntent_Handler, 
+        AMAZON_FallbackIntent_Handler,
+        AMAZON_CancelIntent_Handler,
+        AMAZON_HelpIntent_Handler,
+        AMAZON_StopIntent_Handler,
+        AMAZON_NavigateHomeIntent_Handler,
         AMAZON_YesIntent_Handler,
         AMAZON_NoIntent_Handler,
-        ReadMenu_Handler, 
+        ReadMenu_Handler,
         Pricing_Handler,
         GetDescription_Handler,
-        BuildOrder_Handler, 
-        PlaceOrder_Handler, 
-        PriceOfOrder_Handler, 
-        ReadCurrentOrder_Handler, 
+        BuildOrder_Handler,
+        PlaceOrder_Handler,
+        PriceOfOrder_Handler,
+        ReadCurrentOrder_Handler,
         RemoveItem_Handler,
         FilterByPrice_Handler,
         AllergenFilter_Handler,
         ModifyItem_Handler,
         ClearOrder_Handler,
-        LaunchRequest_Handler, 
+        LaunchRequest_Handler,
         SessionEndedHandler,
         RestaurantRegistration_Handler,
-        TableRegistration_Handler
+        TableRegistration_Handler,
+        Shush_Handler
     )
     .addErrorHandlers(ErrorHandler)
     .addRequestInterceptors(InitMemoryAttributesInterceptor)
     .addRequestInterceptors(RequestHistoryInterceptor)
 
-  // .addResponseInterceptors(ResponseRecordSpeechOutputInterceptor)
+    // .addResponseInterceptors(ResponseRecordSpeechOutputInterceptor)
 
- // .addRequestInterceptors(RequestPersistenceInterceptor)
- // .addResponseInterceptors(ResponsePersistenceInterceptor)
+    // .addRequestInterceptors(RequestPersistenceInterceptor)
+    // .addResponseInterceptors(ResponsePersistenceInterceptor)
 
- // .withTableName("askMemorySkillTable")
- // .withAutoCreateTable(true)
+    // .withTableName("askMemorySkillTable")
+    // .withAutoCreateTable(true)
 
     .lambda();
 
@@ -1849,6 +1872,15 @@ const model = {
                         "table number {tableNumber}",
                         "table {tableNumber}"
                     ]
+                },
+                {
+                    "name": "Shush",
+                    "slots": [],
+                    "samples": [
+                        "callado",
+                        "shh",
+                        "sh"
+                    ]
                 }
             ],
             "types": [
@@ -1857,23 +1889,67 @@ const model = {
                     "values": [
                         {
                             "name": {
-                                "value": "Chicken & Seafood",
-                                "synonyms": [
-                                    "Chicken and Seafood"
-                                ]
+                                "value": "Appetizers"
                             }
                         },
                         {
                             "name": {
-                                "value": "Drinks",
-                                "synonyms": [
-                                    "beverages"
-                                ]
+                                "value": "Chicken,Seafood and Pasta"
                             }
                         },
                         {
                             "name": {
-                                "value": "Appetizers",
+                                "value": "Steak and Ribs"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Salads and Soups"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Sides"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Breakfast"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Pancakes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Omelettes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Add-On"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Fajitas"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Chicken Crispers"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Chicken and Seafood"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Appetizer",
                                 "synonyms": [
                                     "apps"
                                 ]
@@ -1886,53 +1962,372 @@ const model = {
                                     "burger"
                                 ]
                             }
-                        },
-                        {
-                            "name": {
-                                "value": "Wraps",
-                                "synonyms": [
-                                    "raps"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Entrees",
-                                "synonyms": [
-                                    "Entree"
-                                ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Wings"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Paninis"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Hot Sandwhiches"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Salads"
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "Street Tacos"
-                            }
                         }
                     ]
                 },
                 {
                     "name": "item",
                     "values": [
+                        {
+                            "name": {
+                                "value": "Crispy Mango Habanero Crispers"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Crispy Buffalo Bleu Crispers"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Honey Chipotle Crispers and Waffles"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Crispy Honey Chipotle Chicken Crispers"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Crispy Chicken Crispers"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Ancho Salmon"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Spicy Shrimp Tacos"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Chipotle Shrimp Fresh Mex Bowl"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Chipotle Chicken Fresh Mex Bowl"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cajun Shrimp Pasta"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cajun Chicken Pasta"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Black Bean and Veggie Fajitas"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Mushroom Jack Chicken Fajitas"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Carnitas Fajitas"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Southern Smokehouse Burger"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Mushroom Swiss Burger"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Queso Burger"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Fried Pickles"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Skillet Queso"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Southwestern Eggrolls"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Tripple Dipper"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "3 Pancakes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Hash Browns"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Buttered Toast"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Fresh Mushrooms"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Avocado"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Ham"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Bacon"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cheddar Cheese"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "American Cheese"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Vegetable Omelette"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Bacon Temptation Omelette"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Colorado Omelette"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Chicken Fajita Omelette"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Big Steak Omelette"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Spicy Poblano Omelette"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Country Fried Steak and Eggs"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Sirloin Tips and Eggs"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Split Decision Breakfast"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Breakfast Sampler"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Mexican Churro Pancakes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Italian Cannoli Pancakes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cupcake Pancakes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Scratch Made Belgian Waffle Platter"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "French Toast Platter"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Turkey Sausage"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Ham N Cheese"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Meat N Potatoes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "The Everything"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Granny's Country"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Mashed Potatoes"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Lemon Butter Broccoli"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Coleslaw"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Seasoned Fries"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Caesar Salad"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Caesar Salad With Grilled Chicken"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "White Cheddar Broccoli Cheese Soup"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Center Cut Sirloin and Crispy Shrimp"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Center Cut Serloin"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Big Ribs Whiskey Glazed"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Fish and Chips"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Fried Shrimp"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Crispy Chicken Tenders"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Signature Whiskey Glazed Chicken"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Chicken Parmesan Pasta"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cajun Shrimp and Chicken Pasta"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Cheeseburger"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Bacon Cheesburger"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Green Bean Fries"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Traditional Wings"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Pan Seared Pot Stickers"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "Boneless Wings"
+                            }
+                        },
                         {
                             "name": {
                                 "value": "Firecracker Wrap"
@@ -2205,7 +2600,10 @@ const model = {
                         },
                         {
                             "name": {
-                                "value": "one dollar"
+                                "value": "one dollar",
+                                "synonyms": [
+                                    "a dollar"
+                                ]
                             }
                         },
                         {
@@ -2220,11 +2618,6 @@ const model = {
                                     "9.50",
                                     "$9.50"
                                 ]
-                            }
-                        },
-                        {
-                            "name": {
-                                "value": "one hundred dollars"
                             }
                         },
                         {
