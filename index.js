@@ -996,8 +996,7 @@ const LaunchRequest_Handler = {
         let say = '';
 
         // get alexa id
-        //alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();
-        alexaID = "48";
+        alexaID = handlerInput.requestEnvelope.context.System.device.deviceId.toString();
 
         var isRegistered = true;
         // get restaurant id
